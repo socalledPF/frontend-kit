@@ -1,0 +1,34 @@
+{
+  "name": "@amusite/request",
+  "version": "0.1.0",
+  "description": "Adapter-driven request client for RuoYi-style admin projects.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@amusite/shared": "workspace:*",
+    "@amusite/utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "axios": "^1.7.9"
+  },
+  "sideEffects": false
+}

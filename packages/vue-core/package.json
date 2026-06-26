@@ -1,0 +1,41 @@
+{
+  "name": "@amusite/vue-core",
+  "version": "0.1.0",
+  "description": "Vue composables for admin business workflows.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@amusite/shared": "workspace:*",
+    "vue-demi": "^0.14.10"
+  },
+  "peerDependencies": {
+    "@vue/composition-api": "^1.7.2",
+    "vue": "^2.6.14 || ^3.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@vue/composition-api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@vue/composition-api": "^1.7.2",
+    "vue": "2.6.14"
+  },
+  "sideEffects": false
+}

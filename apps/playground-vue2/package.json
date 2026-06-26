@@ -1,0 +1,23 @@
+{
+  "name": "@amusite/playground-vue2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@amusite/request": "workspace:*",
+    "@amusite/styles": "workspace:*",
+    "@amusite/vue-core": "workspace:*",
+    "@vue/composition-api": "^1.7.2",
+    "element-ui": "^2.15.14",
+    "vue": "2.6.14",
+    "vue-demi": "^0.14.10"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

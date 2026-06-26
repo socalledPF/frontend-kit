@@ -1,0 +1,9 @@
+node_modules
+dist
+.turbo
+coverage
+.DS_Store
+*.log
+apps/docs/.vitepress/dist
+apps/docs/.vitepress/cache
+apps/docs/.vitepress/.temp

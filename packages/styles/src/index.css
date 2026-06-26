@@ -1,0 +1,64 @@
+:root {
+  --x-primary-color: #409eff;
+  --x-success-color: #67c23a;
+  --x-warning-color: #e6a23c;
+  --x-danger-color: #f56c6c;
+  --x-info-color: #909399;
+  --x-text-color: #303133;
+  --x-text-color-secondary: #606266;
+  --x-border-color: #dcdfe6;
+  --x-border-color-light: #ebeef5;
+  --x-page-bg: #f5f7fa;
+  --x-surface-bg: #ffffff;
+  --x-border-radius: 4px;
+  --x-page-gap: 16px;
+  --x-page-padding: 16px;
+}
+
+.x-admin-page {
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--x-page-padding);
+  color: var(--x-text-color);
+  background: var(--x-page-bg);
+}
+
+.x-admin-section {
+  box-sizing: border-box;
+  margin-bottom: var(--x-page-gap);
+  padding: 16px;
+  border: 1px solid var(--x-border-color-light);
+  border-radius: var(--x-border-radius);
+  background: var(--x-surface-bg);
+}
+
+.x-admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.x-admin-toolbar__actions,
+.x-admin-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.x-admin-table {
+  width: 100%;
+}
+
+.x-admin-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.x-text-muted {
+  color: var(--x-text-color-secondary);
+}
