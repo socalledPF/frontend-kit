@@ -10,6 +10,7 @@
 - `@amusite/utils`：纯函数工具，不依赖框架。
 - `@amusite/request`：适配器驱动的请求封装。
 - `@amusite/vue-core`：`useTable`、`useDict`、`useModal`、`useSelection`。
+- `@amusite/vue2-element-business`：Vue2 + Element-UI 业务组件。
 - `@amusite/styles`：CSS Variables 和后台布局 helper。
 
 [开始使用](/guide/quick-start)

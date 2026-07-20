@@ -1,0 +1,33 @@
+{
+  "name": "@amusite/vue2-element-business",
+  "version": "0.1.0",
+  "description": "Vue2 + Element-UI business components for RuoYi-style admin pages.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "build": "tsup && cp src/style.css dist/style.css",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "peerDependencies": {
+    "element-ui": "^2.15.0",
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "element-ui": "^2.15.14",
+    "vue": "2.6.14"
+  },
+  "sideEffects": ["*.css"]
+}

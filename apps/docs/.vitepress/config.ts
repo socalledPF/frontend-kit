@@ -23,7 +23,8 @@ export default defineConfig({
           items: [
             { text: 'Request', link: '/guide/request' },
             { text: 'Utils', link: '/guide/utils' },
-            { text: 'Vue Core', link: '/guide/vue-core' }
+            { text: 'Vue Core', link: '/guide/vue-core' },
+            { text: 'Vue2 Element Business', link: '/guide/vue2-element-business' }
           ]
         }
       ]

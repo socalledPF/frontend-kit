@@ -11,6 +11,7 @@
   "dependencies": {
     "@amusite/request": "workspace:*",
     "@amusite/styles": "workspace:*",
+    "@amusite/vue2-element-business": "workspace:*",
     "@amusite/vue-core": "workspace:*",
     "@vue/composition-api": "^1.7.2",
     "element-ui": "^2.15.14",

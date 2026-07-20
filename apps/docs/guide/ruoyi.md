@@ -18,9 +18,12 @@ import Vue from 'vue'
 import VueCompositionApi from '@vue/composition-api'
 import ElementUI from 'element-ui'
 import '@amusite/styles/style.css'
+import '@amusite/vue2-element-business/style.css'
+import Vue2ElementBusiness from '@amusite/vue2-element-business'
 
 Vue.use(VueCompositionApi)
 Vue.use(ElementUI)
+Vue.use(Vue2ElementBusiness)
 ```
 
 ## 请求适配
@@ -39,3 +42,13 @@ export const request = createRequest({
 ```
 
 库不会直接读取 token、调用 router 或展示 Element Message，这些项目差异都通过 adapter 注入。
+
+## QueryForm / ProTable 迁移
+
+`@amusite/vue2-element-business` 已内置从 RuoYi 项目适配来的 `QueryForm`、`ProTable` 和 `Pagination`。默认会注册兼容名，也会注册组件库别名：
+
+- `QueryForm` / `XSearchForm`
+- `ProTable` / `XDataTable`
+- `Pagination` / `XPagination`
+
+原有 `fields`、`columns`、`slotName`、`headerSlotName`、`update:page`、`update:limit` 和 `pagination` 事件可以继续使用。

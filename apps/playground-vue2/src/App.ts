@@ -1,6 +1,7 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import { defineComponent } from 'vue-demi'
 import { useDict, useTable } from '@amusite/vue-core'
+import type { PaginationPayload, ProTableColumn, QueryFormField } from '@amusite/vue2-element-business'
 
 interface UserRow {
   userId: number
@@ -61,164 +62,110 @@ export default defineComponent({
       pageNum: table.pageNum,
       pageSize: table.pageSize,
       search: table.search,
-      reset: table.reset,
-      setPage: table.setPage,
-      setPageSize: table.setPageSize,
+      queryFields: [
+        { prop: 'userName', label: '用户名称', component: 'el-input' },
+        { prop: 'status', label: '状态', slotName: 'status' }
+      ] as QueryFormField[],
+      columns: [
+        { prop: 'userId', label: 'ID', width: 80 },
+        { prop: 'userName', label: '用户名称' },
+        { prop: 'status', label: '状态', slotName: 'status' }
+      ] as ProTableColumn[],
       statusOptions: statusDict.optionsMap,
       getStatusLabel: (value: UserRow['status']) =>
-        statusDict.getLabel('sys_normal_disable', value, value)
+        statusDict.getLabel('sys_normal_disable', value, value),
+      handleQueryModelChange: (model: UserQuery) => {
+        Object.keys(table.query).forEach((key) => {
+          delete table.query[key as keyof UserQuery]
+        })
+        Object.assign(table.query, model)
+      },
+      handleQuery: () => table.search(),
+      handleReset: () => table.reset(),
+      handlePagination: ({ page, limit }: PaginationPayload) => {
+        if (limit !== table.pageSize.value) {
+          return table.setPageSize(limit)
+        }
+
+        return table.setPage(page)
+      }
     }
   },
   render(this: any, h: CreateElement): VNode {
     const statusOptions = this.statusOptions.sys_normal_disable || []
+    const statusSelectSlot = ({
+      value,
+      update
+    }: {
+      value: string
+      update: (value: string) => void
+    }) =>
+      h(
+        'el-select',
+        {
+          props: {
+            value,
+            clearable: true,
+            placeholder: '请选择状态'
+          },
+          on: {
+            input: update
+          }
+        },
+        statusOptions.map((item: { label: string; value: string | number }) =>
+          h('el-option', {
+            key: item.value,
+            props: {
+              label: item.label,
+              value: item.value
+            }
+          })
+        )
+      )
 
     return h('main', { class: 'x-admin-page' }, [
       h('section', { class: 'x-admin-section' }, [
-        h('div', { class: 'x-admin-toolbar' }, [
-          h(
-            'el-form',
-            {
-              class: 'x-admin-toolbar__filters',
-              props: {
-                inline: true,
-                model: this.query,
-                size: 'small'
-              }
-            },
-            [
-              h('el-form-item', { props: { label: '用户名称' } }, [
-                h('el-input', {
-                  props: {
-                    value: this.query.userName,
-                    clearable: true,
-                    placeholder: '请输入用户名称'
-                  },
-                  on: {
-                    input: (value: string) => {
-                      this.query.userName = value
-                    }
-                  }
-                })
-              ]),
-              h('el-form-item', { props: { label: '状态' } }, [
-                h(
-                  'el-select',
-                  {
-                    props: {
-                      value: this.query.status,
-                      clearable: true,
-                      placeholder: '请选择状态'
-                    },
-                    on: {
-                      input: (value: string) => {
-                        this.query.status = value
-                      }
-                    }
-                  },
-                  statusOptions.map((item: { label: string; value: string | number }) =>
-                    h('el-option', {
-                      key: item.value,
-                      props: {
-                        label: item.label,
-                        value: item.value
-                      }
-                    })
-                  )
-                )
-              ])
-            ]
-          ),
-          h('div', { class: 'x-admin-toolbar__actions' }, [
-            h(
-              'el-button',
-              {
-                props: {
-                  size: 'small',
-                  type: 'primary'
-                },
-                on: {
-                  click: () => this.search()
-                }
-              },
-              ['查询']
-            ),
-            h(
-              'el-button',
-              {
-                props: {
-                  size: 'small'
-                },
-                on: {
-                  click: () => this.reset()
-                }
-              },
-              ['重置']
-            )
-          ])
-        ]),
-        h(
-          'el-table',
-          {
-            class: 'x-admin-table',
-            props: {
-              data: this.list,
-              border: true
-            },
-            directives: [
-              {
-                name: 'loading',
-                value: this.loading
-              }
-            ]
+        h('query-form', {
+          props: {
+            model: this.query,
+            fields: this.queryFields,
+            labelWidth: '90px'
           },
-          [
-            h('el-table-column', {
-              props: {
-                prop: 'userId',
-                label: 'ID',
-                width: 80
-              }
-            }),
-            h('el-table-column', {
-              props: {
-                prop: 'userName',
-                label: '用户名称'
-              }
-            }),
-            h('el-table-column', {
-              props: {
-                prop: 'status',
-                label: '状态'
-              },
-              scopedSlots: {
-                default: ({ row }: { row: UserRow }) =>
-                  h(
-                    'el-tag',
-                    {
-                      props: {
-                        type: row.status === '0' ? 'success' : 'danger'
-                      }
-                    },
-                    [this.getStatusLabel(row.status)]
-                  )
-              }
-            })
-          ]
-        ),
-        h('div', { class: 'x-admin-pagination' }, [
-          h('el-pagination', {
-            props: {
-              currentPage: this.pageNum,
-              pageSize: this.pageSize,
-              total: this.total,
-              layout: 'total, sizes, prev, pager, next'
-            },
-            on: {
-              'current-change': this.setPage,
-              'size-change': this.setPageSize
-            }
-          })
-        ])
+          on: {
+            'update:model': this.handleQueryModelChange,
+            query: this.handleQuery,
+            reset: this.handleReset
+          },
+          scopedSlots: {
+            status: statusSelectSlot
+          }
+        }),
+        h('pro-table', {
+          class: 'x-admin-table',
+          props: {
+            data: this.list,
+            columns: this.columns,
+            loading: this.loading,
+            total: this.total,
+            page: this.pageNum,
+            limit: this.pageSize
+          },
+          on: {
+            pagination: this.handlePagination
+          },
+          scopedSlots: {
+            status: ({ row }: { row: UserRow }) =>
+              h(
+                'el-tag',
+                {
+                  props: {
+                    type: row.status === '0' ? 'success' : 'danger'
+                  }
+                },
+                [this.getStatusLabel(row.status)]
+              )
+          }
+        })
       ])
     ])
   }

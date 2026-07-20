@@ -3,8 +3,8 @@
 ## 安装
 
 ```bash
-pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/styles
-pnpm add axios vue-demi
+pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/vue2-element-business @amusite/styles
+pnpm add axios vue-demi element-ui
 ```
 
 Vue2 项目还需要安装并注册 Composition API：
@@ -24,6 +24,15 @@ Vue.use(VueCompositionApi)
 
 ```ts
 import '@amusite/styles/style.css'
+import '@amusite/vue2-element-business/style.css'
+```
+
+## 注册 Vue2 业务组件
+
+```ts
+import Vue2ElementBusiness from '@amusite/vue2-element-business'
+
+Vue.use(Vue2ElementBusiness)
 ```
 
 ## 开发命令
