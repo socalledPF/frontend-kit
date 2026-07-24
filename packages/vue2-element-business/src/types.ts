@@ -36,3 +36,92 @@ export interface PaginationPayload {
   page: number
   limit: number
 }
+
+export type LoadingSize = 'small' | 'medium' | 'large'
+
+export interface LoadingProps {
+  loading?: boolean
+  text?: string
+  fullscreen?: boolean
+  lock?: boolean
+  delay?: number
+  minDuration?: number
+  background?: string
+  spinnerClass?: string
+  maskClass?: string
+  size?: LoadingSize
+  zIndex?: number
+}
+
+export type UploadMode = 'file' | 'image'
+
+export type UploadStatus = 'ready' | 'queued' | 'uploading' | 'success' | 'error'
+
+export interface UploadItem {
+  uid?: string
+  id?: string | number
+  name: string
+  url?: string
+  size?: number
+  type?: string
+  meta?: Record<string, unknown>
+}
+
+export interface UploadFileState {
+  uid: string
+  name: string
+  url?: string
+  size?: number
+  type?: string
+  status: UploadStatus
+  percentage: number
+  file?: File
+  item?: UploadItem
+  error?: unknown
+  errorMessage?: string
+}
+
+export interface UploadRequestContext {
+  file: File
+  fieldName: string
+  data: Record<string, unknown>
+  signal?: AbortSignal
+  onProgress: (percent: number) => void
+}
+
+export type UploadRequest = (context: UploadRequestContext) => Promise<UploadItem>
+
+export type UploadData = Record<string, unknown> | ((file: File) => Record<string, unknown>)
+
+export type UploadBeforeUpload = (
+  file: File,
+  currentValue: UploadItem[]
+) => boolean | Promise<boolean>
+
+export type UploadBeforeRemove = (
+  file: UploadFileState,
+  currentValue: UploadItem[]
+) => boolean | Promise<boolean>
+
+export type UploadValidationErrorCode =
+  | 'limit'
+  | 'type'
+  | 'size'
+  | 'duplicate'
+  | 'before-upload'
+  | 'config'
+
+export interface UploadValidationError {
+  code: UploadValidationErrorCode
+  message: string
+  file?: File
+  error?: unknown
+}
+
+export type UploadChangeType = 'select' | 'success' | 'remove' | 'clear'
+
+export interface UploadChangeDetail {
+  type: UploadChangeType
+  file?: UploadFileState
+  item?: UploadItem
+}

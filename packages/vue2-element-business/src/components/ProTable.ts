@@ -1,14 +1,9 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import type { ProTableColumn } from '../types'
+import Loading from './Loading'
 import Pagination from './Pagination'
 
-const RESERVED_COLUMN_FIELDS = [
-  'visible',
-  'slotName',
-  'headerSlotName',
-  'columnSetting',
-  'key'
-]
+const RESERVED_COLUMN_FIELDS = ['visible', 'slotName', 'headerSlotName', 'columnSetting', 'key']
 
 function compactObject<T extends Record<string, unknown>>(value: T): T {
   Object.keys(value).forEach((field) => {
@@ -35,6 +30,10 @@ export default Vue.extend({
     loading: {
       type: Boolean,
       default: false
+    },
+    loadingProps: {
+      type: Object,
+      default: () => ({})
     },
     page: {
       type: Number,
@@ -177,13 +176,7 @@ export default Vue.extend({
         props: {
           border: true,
           data: this.data
-        },
-        directives: [
-          {
-            name: 'loading',
-            value: this.loading
-          }
-        ]
+        }
       },
       [
         ...this.visibleColumns.map((column: ProTableColumn, index: number) =>
@@ -210,6 +203,17 @@ export default Vue.extend({
         })
       : null
 
-    return h('div', { class: ['x-pro-table', 'pro-table'] }, [table, pagination])
+    const loadingTable = h(
+      Loading,
+      {
+        props: {
+          ...this.loadingProps,
+          loading: this.loading
+        }
+      },
+      [table]
+    )
+
+    return h('div', { class: ['x-pro-table', 'pro-table'] }, [loadingTable, pagination])
   }
 })

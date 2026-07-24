@@ -1,7 +1,13 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
-import { defineComponent } from 'vue-demi'
+import { defineComponent, ref } from 'vue-demi'
 import { useDict, useTable } from '@amusite/vue-core'
-import type { PaginationPayload, ProTableColumn, QueryFormField } from '@amusite/vue2-element-business'
+import type {
+  PaginationPayload,
+  ProTableColumn,
+  QueryFormField,
+  UploadItem,
+  UploadRequestContext
+} from '@amusite/vue2-element-business'
 
 interface UserRow {
   userId: number
@@ -20,9 +26,79 @@ const mockUsers: UserRow[] = [
   { userId: 3, userName: 'disabled-user', status: '1' }
 ]
 
+function readImage(file: File): Promise<string | undefined> {
+  if (!file.type.startsWith('image/')) {
+    return Promise.resolve(undefined)
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : undefined)
+    reader.onerror = () => reject(reader.error || new Error('图片读取失败'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function mockUpload({ file, signal, onProgress }: UploadRequestContext): Promise<UploadItem> {
+  return new Promise((resolve, reject) => {
+    let percentage = 0
+    let settled = false
+
+    const finish = async () => {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      clearInterval(timer)
+      signal?.removeEventListener('abort', handleAbort)
+
+      try {
+        resolve({
+          id: `demo-${Date.now()}-${file.name}`,
+          name: file.name,
+          url: await readImage(file),
+          size: file.size,
+          type: file.type
+        })
+      } catch (error) {
+        reject(error)
+      }
+    }
+
+    const handleAbort = () => {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      clearInterval(timer)
+      reject(new DOMException('上传已取消', 'AbortError'))
+    }
+
+    const timer = window.setInterval(() => {
+      percentage = Math.min(100, percentage + 20)
+      onProgress(percentage)
+
+      if (percentage === 100) {
+        void finish()
+      }
+    }, 140)
+
+    if (signal?.aborted) {
+      handleAbort()
+      return
+    }
+
+    signal?.addEventListener('abort', handleAbort, { once: true })
+  })
+}
+
 export default defineComponent({
   name: 'App',
   setup() {
+    const uploadedFiles = ref<UploadItem[]>([])
+    const uploadedImages = ref<UploadItem[]>([])
     const statusDict = useDict({
       loader: async () => [
         { label: '正常', value: '0' },
@@ -37,6 +113,7 @@ export default defineComponent({
         status: ''
       },
       request: async (params) => {
+        await new Promise((resolve) => setTimeout(resolve, 450))
         const pageNum = Number(params.pageNum ?? 1)
         const pageSize = Number(params.pageSize ?? 10)
         const filtered = mockUsers.filter((item) => {
@@ -59,6 +136,20 @@ export default defineComponent({
       list: table.list,
       total: table.total,
       loading: table.loading,
+      loadingProps: {
+        text: '正在加载用户数据',
+        delay: 120,
+        minDuration: 300
+      },
+      uploadedFiles,
+      uploadedImages,
+      uploadRequest: mockUpload,
+      handleFileUploadChange: (value: UploadItem[]) => {
+        uploadedFiles.value = value
+      },
+      handleImageUploadChange: (value: UploadItem[]) => {
+        uploadedImages.value = value
+      },
       pageNum: table.pageNum,
       pageSize: table.pageSize,
       search: table.search,
@@ -146,6 +237,7 @@ export default defineComponent({
             data: this.list,
             columns: this.columns,
             loading: this.loading,
+            loadingProps: this.loadingProps,
             total: this.total,
             page: this.pageNum,
             limit: this.pageSize
@@ -166,6 +258,52 @@ export default defineComponent({
               )
           }
         })
+      ]),
+      h('section', { class: 'x-admin-section' }, [
+        h('h2', { class: 'playground-section-title' }, ['上传组件']),
+        h('div', { class: 'playground-upload-grid' }, [
+          h('div', { class: 'playground-upload-panel' }, [
+            h('h3', { class: 'playground-upload-title' }, ['文件上传']),
+            h(
+              'x-upload',
+              {
+                props: {
+                  value: this.uploadedFiles,
+                  request: this.uploadRequest,
+                  multiple: true,
+                  drag: true,
+                  limit: 3,
+                  maxSizeMb: 10,
+                  concurrency: 2
+                },
+                on: {
+                  input: this.handleFileUploadChange
+                }
+              },
+              [h('span', { slot: 'tip' }, ['最多 3 个文件，单个文件不超过 10 MB'])]
+            )
+          ]),
+          h('div', { class: 'playground-upload-panel' }, [
+            h('h3', { class: 'playground-upload-title' }, ['图片上传']),
+            h(
+              'x-upload',
+              {
+                props: {
+                  value: this.uploadedImages,
+                  request: this.uploadRequest,
+                  mode: 'image',
+                  multiple: true,
+                  limit: 4,
+                  maxSizeMb: 5
+                },
+                on: {
+                  input: this.handleImageUploadChange
+                }
+              },
+              [h('span', { slot: 'tip' }, ['支持常见图片格式，最多 4 张'])]
+            )
+          ])
+        ])
       ])
     ])
   }

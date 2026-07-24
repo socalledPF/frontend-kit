@@ -5,6 +5,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import '@amusite/styles/style.css'
 import Vue2ElementBusiness from '@amusite/vue2-element-business'
 import '@amusite/vue2-element-business/style.css'
+import './app.css'
 import App from './App'
 
 Vue.use(VueCompositionApi)

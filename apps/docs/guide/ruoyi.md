@@ -50,5 +50,9 @@ export const request = createRequest({
 - `QueryForm` / `XSearchForm`
 - `ProTable` / `XDataTable`
 - `Pagination` / `XPagination`
+- `Loading` / `XLoading`
+- `Upload` / `XUpload`
 
 原有 `fields`、`columns`、`slotName`、`headerSlotName`、`update:page`、`update:limit` 和 `pagination` 事件可以继续使用。
+
+上传组件不读取 token，也不固定解析 `/common/upload` 响应。宿主通过 `UploadRequest` 使用已有 `request.post()`，在回调内构造 FormData 并将响应映射为 `UploadItem`；完整示例见 [Vue2 Element Business](/guide/vue2-element-business#upload)。
