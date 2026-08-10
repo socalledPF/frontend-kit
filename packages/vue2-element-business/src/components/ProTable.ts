@@ -35,6 +35,10 @@ export default Vue.extend({
       type: Object,
       default: () => ({})
     },
+    size: {
+      type: String,
+      default: undefined
+    },
     page: {
       type: Number,
       default: 1
@@ -175,7 +179,8 @@ export default Vue.extend({
         on: this.$listeners,
         props: {
           border: true,
-          data: this.data
+          data: this.data,
+          size: this.size
         }
       },
       [

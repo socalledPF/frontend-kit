@@ -21,6 +21,71 @@ Vue.use(Vue2ElementBusiness)
 - `Pagination` / `XPagination`
 - `Loading` / `XLoading`
 - `Upload` / `XUpload`
+- `AsyncButton` / `XAsyncButton`
+- `DictTag` / `XDictTag`
+- `DictSelect` / `XDictSelect`
+- `TableToolbar` / `XTableToolbar`
+
+## AsyncButton
+
+`XAsyncButton` 自动管理异步 loading、阻止重复执行，并支持异步 guard 或确认提示：
+
+```vue
+<x-async-button
+  type="primary"
+  icon="el-icon-check"
+  :action="saveUser"
+  confirm="确认保存当前用户吗？"
+  @success="table.refresh()"
+  @error="handleError"
+>
+  保存
+</x-async-button>
+```
+
+`confirm` 可以是字符串、布尔值或返回布尔值的异步函数。传入字符串时使用 Element-UI 的 `$confirm`；也可以通过 `before-action` 注入表单校验。公开方法 `execute(...args)` 可用于程序化执行，事件包括 `click`、`loading-change`、`success`、`error` 和 `cancel`。
+
+## DictTag / DictSelect
+
+两个组件使用统一的 `{ label, value, disabled?, type?, color? }` 字典选项：
+
+```vue
+<x-dict-select v-model="query.status" :options="statusOptions" />
+
+<x-dict-tag :value="row.status" :options="statusOptions" />
+```
+
+```ts
+const statusOptions = [
+  { label: '正常', value: '0', type: 'success' },
+  { label: '停用', value: '1', type: 'danger' }
+]
+```
+
+`DictTag` 默认兼容数字 `0` 和字符串 `'0'`，设置 `strict` 后使用严格匹配；数组值会渲染多个标签。`DictSelect` 支持 Element Select 常用的 `multiple`、`clearable`、`filterable`、`loading` 和 `option` 插槽。
+
+## TableToolbar
+
+工具栏提供搜索区开关、刷新、表格密度、列显隐和全屏控制：
+
+```vue
+<x-table-toolbar
+  :show-search.sync="showSearch"
+  :density.sync="tableDensity"
+  :columns.sync="columns"
+  :refreshing="loading"
+  storage-key="system-users"
+  @refresh="table.refresh()"
+>
+  <template #left>
+    <el-button type="primary" size="small">新增</el-button>
+  </template>
+</x-table-toolbar>
+
+<pro-table :columns="columns" :size="tableDensity" />
+```
+
+只有设置 `storage-key` 时才会写入 localStorage，内容包括密度和列显隐状态。`columnSetting: false` 的列不会出现在设置面板中；`fullscreen-target` 支持选择器、HTMLElement 或返回 HTMLElement 的函数，默认使用工具栏父容器。
 
 ## Loading
 

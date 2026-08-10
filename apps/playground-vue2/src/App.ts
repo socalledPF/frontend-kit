@@ -5,6 +5,7 @@ import type {
   PaginationPayload,
   ProTableColumn,
   QueryFormField,
+  TableDensity,
   UploadItem,
   UploadRequestContext
 } from '@amusite/vue2-element-business'
@@ -25,6 +26,21 @@ const mockUsers: UserRow[] = [
   { userId: 2, userName: 'editor', status: '0' },
   { userId: 3, userName: 'disabled-user', status: '1' }
 ]
+
+function wait(duration: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(resolve, duration)
+
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        reject(new DOMException('请求已取消', 'AbortError'))
+      },
+      { once: true }
+    )
+  })
+}
 
 function readImage(file: File): Promise<string | undefined> {
   if (!file.type.startsWith('image/')) {
@@ -99,10 +115,17 @@ export default defineComponent({
   setup() {
     const uploadedFiles = ref<UploadItem[]>([])
     const uploadedImages = ref<UploadItem[]>([])
+    const showSearch = ref(true)
+    const tableDensity = ref<TableDensity>('medium')
+    const columns = ref<ProTableColumn[]>([
+      { prop: 'userId', label: 'ID', width: 80 },
+      { prop: 'userName', label: '用户名称' },
+      { prop: 'status', label: '状态', slotName: 'status' }
+    ])
     const statusDict = useDict({
       loader: async () => [
-        { label: '正常', value: '0' },
-        { label: '停用', value: '1' }
+        { label: '正常', value: '0', type: 'success' },
+        { label: '停用', value: '1', type: 'danger' }
       ],
       immediateTypes: ['sys_normal_disable']
     })
@@ -112,8 +135,8 @@ export default defineComponent({
         userName: '',
         status: ''
       },
-      request: async (params) => {
-        await new Promise((resolve) => setTimeout(resolve, 450))
+      request: async (params, { signal }) => {
+        await wait(450, signal)
         const pageNum = Number(params.pageNum ?? 1)
         const pageSize = Number(params.pageSize ?? 10)
         const filtered = mockUsers.filter((item) => {
@@ -143,6 +166,9 @@ export default defineComponent({
       },
       uploadedFiles,
       uploadedImages,
+      showSearch,
+      tableDensity,
+      columns,
       uploadRequest: mockUpload,
       handleFileUploadChange: (value: UploadItem[]) => {
         uploadedFiles.value = value
@@ -157,14 +183,20 @@ export default defineComponent({
         { prop: 'userName', label: '用户名称', component: 'el-input' },
         { prop: 'status', label: '状态', slotName: 'status' }
       ] as QueryFormField[],
-      columns: [
-        { prop: 'userId', label: 'ID', width: 80 },
-        { prop: 'userName', label: '用户名称' },
-        { prop: 'status', label: '状态', slotName: 'status' }
-      ] as ProTableColumn[],
       statusOptions: statusDict.optionsMap,
-      getStatusLabel: (value: UserRow['status']) =>
-        statusDict.getLabel('sys_normal_disable', value, value),
+      mockAsyncAction: async () => {
+        await wait(800)
+        return { savedAt: Date.now() }
+      },
+      handleShowSearchChange: (value: boolean) => {
+        showSearch.value = value
+      },
+      handleDensityChange: (value: TableDensity) => {
+        tableDensity.value = value
+      },
+      handleColumnsChange: (value: ProTableColumn[]) => {
+        columns.value = value
+      },
       handleQueryModelChange: (model: UserQuery) => {
         Object.keys(table.query).forEach((key) => {
           delete table.query[key as keyof UserQuery]
@@ -191,44 +223,64 @@ export default defineComponent({
       value: string
       update: (value: string) => void
     }) =>
-      h(
-        'el-select',
-        {
-          props: {
-            value,
-            clearable: true,
-            placeholder: '请选择状态'
-          },
-          on: {
-            input: update
-          }
+      h('x-dict-select', {
+        props: {
+          value,
+          options: statusOptions,
+          placeholder: '请选择状态'
         },
-        statusOptions.map((item: { label: string; value: string | number }) =>
-          h('el-option', {
-            key: item.value,
-            props: {
-              label: item.label,
-              value: item.value
-            }
-          })
-        )
-      )
+        on: {
+          input: update
+        }
+      })
 
     return h('main', { class: 'x-admin-page' }, [
       h('section', { class: 'x-admin-section' }, [
-        h('query-form', {
+        this.showSearch
+          ? h('query-form', {
+              props: {
+                model: this.query,
+                fields: this.queryFields,
+                labelWidth: '90px'
+              },
+              on: {
+                'update:model': this.handleQueryModelChange,
+                query: this.handleQuery,
+                reset: this.handleReset
+              },
+              scopedSlots: {
+                status: statusSelectSlot
+              }
+            })
+          : null,
+        h('x-table-toolbar', {
           props: {
-            model: this.query,
-            fields: this.queryFields,
-            labelWidth: '90px'
+            showSearch: this.showSearch,
+            refreshing: this.loading,
+            density: this.tableDensity,
+            columns: this.columns,
+            storageKey: 'playground-users'
           },
           on: {
-            'update:model': this.handleQueryModelChange,
-            query: this.handleQuery,
-            reset: this.handleReset
+            'update:showSearch': this.handleShowSearchChange,
+            'update:density': this.handleDensityChange,
+            'update:columns': this.handleColumnsChange,
+            refresh: this.search
           },
           scopedSlots: {
-            status: statusSelectSlot
+            left: () =>
+              h(
+                'x-async-button',
+                {
+                  props: {
+                    action: this.mockAsyncAction,
+                    confirm: '确认执行模拟异步操作吗？',
+                    type: 'primary',
+                    icon: 'el-icon-plus'
+                  }
+                },
+                ['异步操作']
+              )
           }
         }),
         h('pro-table', {
@@ -238,6 +290,7 @@ export default defineComponent({
             columns: this.columns,
             loading: this.loading,
             loadingProps: this.loadingProps,
+            size: this.tableDensity,
             total: this.total,
             page: this.pageNum,
             limit: this.pageSize
@@ -247,15 +300,12 @@ export default defineComponent({
           },
           scopedSlots: {
             status: ({ row }: { row: UserRow }) =>
-              h(
-                'el-tag',
-                {
-                  props: {
-                    type: row.status === '0' ? 'success' : 'danger'
-                  }
-                },
-                [this.getStatusLabel(row.status)]
-              )
+              h('x-dict-tag', {
+                props: {
+                  value: row.status,
+                  options: statusOptions
+                }
+              })
           }
         })
       ]),

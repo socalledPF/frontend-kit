@@ -52,6 +52,10 @@ export const request = createRequest({
 - `Pagination` / `XPagination`
 - `Loading` / `XLoading`
 - `Upload` / `XUpload`
+- `AsyncButton` / `XAsyncButton`
+- `DictTag` / `XDictTag`
+- `DictSelect` / `XDictSelect`
+- `TableToolbar` / `XTableToolbar`
 
 原有 `fields`、`columns`、`slotName`、`headerSlotName`、`update:page`、`update:limit` 和 `pagination` 事件可以继续使用。
 

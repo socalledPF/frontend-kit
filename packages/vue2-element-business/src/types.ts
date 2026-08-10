@@ -125,3 +125,28 @@ export interface UploadChangeDetail {
   file?: UploadFileState
   item?: UploadItem
 }
+
+export type AsyncButtonConfirm =
+  | string
+  | boolean
+  | ((...args: unknown[]) => boolean | Promise<boolean>)
+
+export type DictValue = string | number
+
+export interface BusinessDictOption<Value extends DictValue = DictValue> {
+  label: string
+  value: Value
+  disabled?: boolean
+  type?: string
+  color?: string
+  className?: string
+  raw?: unknown
+  [key: string]: unknown
+}
+
+export type TableDensity = 'medium' | 'small' | 'mini'
+
+export interface TableToolbarPreferences {
+  density?: TableDensity
+  columns?: Record<string, boolean>
+}

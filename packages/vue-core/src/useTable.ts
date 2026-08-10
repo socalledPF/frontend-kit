@@ -9,14 +9,25 @@ export interface UseTableFieldMap {
 }
 
 export interface UseTableOptions<T, Q extends object = Recordable> {
-  request: TableRequest<T, Q>
+  request: (
+    query: Q & Partial<PageQuery> & Recordable,
+    context: UseTableRequestContext
+  ) => ReturnType<TableRequest<T, Q>>
   initialQuery?: Partial<Q>
   immediate?: boolean
   defaultPageNum?: number
   defaultPageSize?: number
   fieldMap?: UseTableFieldMap
   responseAdapter?: (response: unknown) => PageResult<T>
+  transformParams?: (params: Q & Recordable) => Q & Partial<PageQuery> & Recordable
+  cancelPrevious?: boolean
+  keepDataOnError?: boolean
   onError?: (error: unknown) => void
+}
+
+export interface UseTableRequestContext {
+  requestId: number
+  signal?: AbortSignal
 }
 
 export interface UseTableReturn<T, Q extends object = Recordable> {
@@ -30,6 +41,7 @@ export interface UseTableReturn<T, Q extends object = Recordable> {
   error: Ref<unknown>
   load: () => Promise<PageResult<T>>
   refresh: () => Promise<PageResult<T>>
+  cancel: () => void
   search: (patch?: Partial<Q>) => Promise<PageResult<T>>
   reset: (nextQuery?: Partial<Q>) => Promise<PageResult<T>>
   setPage: (value: number) => Promise<PageResult<T>>
@@ -76,7 +88,9 @@ function resolvePageResult<T>(
   const listKey = fieldMap.listKey ?? 'rows'
   const totalKey = fieldMap.totalKey ?? 'total'
   const source = isRecord(response) ? response : {}
-  const data = isRecord((source as ApiResponse).data) ? ((source as ApiResponse).data as Recordable) : {}
+  const data = isRecord((source as ApiResponse).data)
+    ? ((source as ApiResponse).data as Recordable)
+    : {}
   const listValue = source[listKey] ?? data[listKey] ?? source.list ?? data.list ?? []
   const totalValue = source[totalKey] ?? data[totalKey]
   const list = Array.isArray(listValue) ? (listValue as T[]) : []
@@ -95,7 +109,9 @@ export function useTable<T, Q extends object = Recordable>(
     defaultPageNum = 1,
     defaultPageSize = 10,
     immediate = true,
-    fieldMap = {}
+    fieldMap = {},
+    cancelPrevious = true,
+    keepDataOnError = true
   } = options
   const pageNumKey = fieldMap.pageNumKey ?? 'pageNum'
   const pageSizeKey = fieldMap.pageSizeKey ?? 'pageSize'
@@ -107,6 +123,9 @@ export function useTable<T, Q extends object = Recordable>(
   const total = ref(0)
   const loading = ref(false)
   const error = ref<unknown>()
+  const activeRequests = new Map<number, AbortController | undefined>()
+  let requestSequence = 0
+  let latestRequestId = 0
   const params = computed(() => {
     return {
       ...(query as Recordable),
@@ -115,24 +134,72 @@ export function useTable<T, Q extends object = Recordable>(
     } as Q & Recordable
   })
 
+  const syncLoading = () => {
+    loading.value = activeRequests.size > 0
+  }
+
+  const cancel = () => {
+    latestRequestId = ++requestSequence
+    activeRequests.forEach((controller) => controller?.abort())
+    activeRequests.clear()
+    syncLoading()
+  }
+
   const load = async () => {
-    loading.value = true
+    if (cancelPrevious) {
+      cancel()
+    }
+
+    const requestId = ++requestSequence
+    const controller = typeof AbortController === 'undefined' ? undefined : new AbortController()
+    const context: UseTableRequestContext = {
+      requestId,
+      signal: controller?.signal
+    }
+
+    latestRequestId = requestId
+    activeRequests.set(requestId, controller)
+    syncLoading()
     error.value = undefined
 
     try {
-      const response = await options.request(params.value as Q & Partial<PageQuery>)
+      const rawParams = { ...params.value } as Q & Recordable
+      const requestParams = options.transformParams
+        ? options.transformParams(rawParams)
+        : (rawParams as Q & Partial<PageQuery> & Recordable)
+      const response = await options.request(requestParams, context)
       const result = resolvePageResult<T>(response, options)
-      list.value = result.list
-      total.value = result.total
+
+      if (requestId === latestRequestId && activeRequests.has(requestId)) {
+        list.value = result.list
+        total.value = result.total
+      }
+
       return result
     } catch (caughtError) {
-      error.value = caughtError
-      list.value = []
-      total.value = 0
-      options.onError?.(caughtError)
+      if (controller?.signal.aborted) {
+        return {
+          list: [...list.value],
+          total: total.value,
+          raw: caughtError
+        }
+      }
+
+      if (requestId === latestRequestId && activeRequests.has(requestId)) {
+        error.value = caughtError
+
+        if (!keepDataOnError) {
+          list.value = []
+          total.value = 0
+        }
+
+        options.onError?.(caughtError)
+      }
+
       throw caughtError
     } finally {
-      loading.value = false
+      activeRequests.delete(requestId)
+      syncLoading()
     }
   }
 
@@ -166,7 +233,7 @@ export function useTable<T, Q extends object = Recordable>(
   }
 
   if (immediate) {
-    void load()
+    void load().catch(() => undefined)
   }
 
   return {
@@ -180,6 +247,7 @@ export function useTable<T, Q extends object = Recordable>(
     error,
     load,
     refresh: load,
+    cancel,
     search,
     reset,
     setPage,

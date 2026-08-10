@@ -170,6 +170,120 @@
   }
 }
 
+.x-dict-tag {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.x-dict-tag__item {
+  max-width: 100%;
+}
+
+.x-dict-tag__item .el-tag__content,
+.x-dict-tag__custom {
+  overflow-wrap: anywhere;
+}
+
+.x-dict-tag__separator,
+.x-dict-tag__empty {
+  color: var(--x-info-color, #909399);
+}
+
+.x-dict-select {
+  width: 100%;
+}
+
+.x-table-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+
+.x-table-toolbar__left,
+.x-table-toolbar__right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.x-table-toolbar__left:empty {
+  display: none;
+}
+
+.x-table-toolbar__right {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.x-table-toolbar__button.el-button {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+.x-table-toolbar__button.is-active:not(.el-button--primary) {
+  color: var(--x-primary-color, #409eff);
+  border-color: var(--x-primary-color, #409eff);
+}
+
+.x-table-toolbar__dropdown,
+.x-table-toolbar__popover {
+  display: inline-flex;
+}
+
+.x-table-toolbar__column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 30px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--x-border-color-light, #ebeef5);
+}
+
+.x-table-toolbar__column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  padding-top: 6px;
+  overflow-y: auto;
+}
+
+.x-table-toolbar__column-item.el-checkbox {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  margin-right: 0;
+}
+
+.x-table-toolbar__column-item .el-checkbox__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.x-table-toolbar__icon--loading {
+  animation: x-loading-spin 0.8s linear infinite;
+}
+
+.x-table-toolbar__density-menu .el-dropdown-menu__item.is-active {
+  color: var(--x-primary-color, #409eff);
+  font-weight: 600;
+}
+
 .x-upload {
   min-width: 0;
   color: var(--x-text-color, #303133);
@@ -472,6 +586,18 @@
 }
 
 @media (max-width: 600px) {
+  .x-table-toolbar {
+    align-items: flex-start;
+  }
+
+  .x-table-toolbar__left {
+    flex: 1 1 auto;
+  }
+
+  .x-table-toolbar__right {
+    flex: 0 0 auto;
+  }
+
   .x-upload__file {
     grid-template-columns: 24px minmax(0, 1fr);
   }
