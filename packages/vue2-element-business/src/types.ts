@@ -150,3 +150,126 @@ export interface TableToolbarPreferences {
   density?: TableDensity
   columns?: Record<string, boolean>
 }
+
+export type FormDialogMode = 'create' | 'edit' | 'view'
+
+export interface FormDialogSubmitContext<
+  Model extends Record<string, unknown> = Record<string, unknown>
+> {
+  mode: FormDialogMode
+  model: Model
+}
+
+export type FormDialogSubmit<
+  Model extends Record<string, unknown> = Record<string, unknown>,
+  Result = unknown
+> = (model: Model, context: FormDialogSubmitContext<Model>) => Result | Promise<Result>
+
+export interface FormDialogCloseContext<
+  Model extends Record<string, unknown> = Record<string, unknown>
+> {
+  mode: FormDialogMode
+  model: Model
+  dirty: boolean
+  submitting: boolean
+  reason: 'cancel' | 'close' | 'success'
+}
+
+export type FormDialogBeforeClose<Model extends Record<string, unknown> = Record<string, unknown>> =
+  (context: FormDialogCloseContext<Model>) => boolean | Promise<boolean>
+
+export type PermissionRequirement = string | string[]
+export type PermissionMatchMode = 'any' | 'all'
+
+export interface PermissionCheckContext {
+  permission?: PermissionRequirement
+  roles?: PermissionRequirement
+  match: PermissionMatchMode
+  permissions: string[]
+  currentRoles: string[]
+}
+
+export type PermissionChecker = (context: PermissionCheckContext) => boolean
+
+export interface PermissionProvider {
+  getPermissions?: () => readonly string[] | undefined
+  getRoles?: () => readonly string[] | undefined
+  check?: PermissionChecker
+  superPermissions?: readonly string[]
+  superRoles?: readonly string[]
+}
+
+export interface PermissionDirectiveValue {
+  permission?: PermissionRequirement
+  roles?: PermissionRequirement
+  match?: PermissionMatchMode
+  checker?: PermissionChecker
+}
+
+export interface DescriptionItem<Row extends object = Record<string, unknown>> {
+  prop: string
+  label?: string
+  span?: number
+  visible?: boolean
+  slotName?: string
+  labelSlotName?: string
+  emptyText?: string
+  dictOptions?: BusinessDictOption[]
+  formatter?: (value: unknown, row: Row, item: DescriptionItem<Row>) => unknown
+  width?: string | number
+  minWidth?: string | number
+  align?: 'left' | 'center' | 'right'
+  labelAlign?: 'left' | 'center' | 'right'
+  className?: string
+  labelClassName?: string
+  [key: string]: unknown
+}
+
+export interface ImportResultError {
+  row?: number
+  field?: string
+  message: string
+  data?: unknown
+}
+
+export interface ImportResult<Data = unknown> {
+  successCount?: number
+  failureCount?: number
+  message?: string
+  errors?: ImportResultError[]
+  data?: Data
+}
+
+export interface ImportRequestContext {
+  file: File
+  fieldName: string
+  data: Record<string, unknown>
+  updateExisting: boolean
+  signal?: AbortSignal
+  onProgress: (percent: number) => void
+}
+
+export type ImportRequest<Result extends ImportResult = ImportResult> = (
+  context: ImportRequestContext
+) => Promise<Result>
+
+export type ImportData =
+  | Record<string, unknown>
+  | ((file: File, updateExisting: boolean) => Record<string, unknown>)
+
+export type ImportValidationErrorCode = 'type' | 'size' | 'before-import' | 'config'
+
+export interface ImportValidationError {
+  code: ImportValidationErrorCode
+  message: string
+  file?: File
+  error?: unknown
+}
+
+export interface ExportFile {
+  data: Blob | ArrayBuffer | string
+  fileName?: string
+  type?: string
+}
+
+export type ExportResult = Blob | ArrayBuffer | string | ExportFile

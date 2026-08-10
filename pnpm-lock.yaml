@@ -124,6 +124,10 @@ importers:
         version: 2.6.14
 
   packages/vue2-element-business:
+    dependencies:
+      '@amusite/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@vue/test-utils':
         specifier: ^1.3.6

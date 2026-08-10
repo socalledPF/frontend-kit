@@ -10,7 +10,17 @@ import App from './App'
 
 Vue.use(VueCompositionApi)
 Vue.use(ElementUI)
-Vue.use(Vue2ElementBusiness)
+Vue.use(Vue2ElementBusiness, {
+  permission: {
+    getPermissions: () => [
+      'system:user:add',
+      'system:user:edit',
+      'system:user:import',
+      'system:user:export'
+    ],
+    getRoles: () => ['operator']
+  }
+})
 
 new Vue({
   render: (h) => h(App)

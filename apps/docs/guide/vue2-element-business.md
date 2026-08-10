@@ -25,6 +25,11 @@ Vue.use(Vue2ElementBusiness)
 - `DictTag` / `XDictTag`
 - `DictSelect` / `XDictSelect`
 - `TableToolbar` / `XTableToolbar`
+- `FormDialog` / `XFormDialog`
+- `Permission` / `XPermission`，以及 `v-permission`
+- `Descriptions` / `XDescriptions`
+- `ImportDialog` / `XImportDialog`
+- `ExportButton` / `XExportButton`
 
 ## AsyncButton
 
@@ -86,6 +91,138 @@ const statusOptions = [
 ```
 
 只有设置 `storage-key` 时才会写入 localStorage，内容包括密度和列显隐状态。`columnSetting: false` 的列不会出现在设置面板中；`fullscreen-target` 支持选择器、HTMLElement 或返回 HTMLElement 的函数，默认使用工具栏父容器。
+
+## FormDialog
+
+`XFormDialog` 管理新增、编辑和查看弹窗中的模型副本、表单校验、异步提交与关闭保护。只有提交成功才会默认关闭：
+
+```vue
+<x-form-dialog
+  v-model="dialogVisible"
+  :model.sync="userForm"
+  :mode="editingId ? 'edit' : 'create'"
+  :title="editingId ? '编辑用户' : '新增用户'"
+  :rules="rules"
+  :submit="saveUser"
+  confirm-close
+  @success="table.refresh()"
+>
+  <template #default="{ model }">
+    <el-form-item label="用户名称" prop="userName">
+      <el-input v-model="model.userName" />
+    </el-form-item>
+    <el-form-item label="状态" prop="status">
+      <x-dict-select v-model="model.status" :options="statusOptions" />
+    </el-form-item>
+  </template>
+</x-form-dialog>
+```
+
+`submit(model, { mode })` 可以返回任意 Promise 结果；组件会触发 `submit`、`success`、`error`、`validation-error`、`loading-change` 和 `dirty-change`。公开方法为 `validate()`、`submitForm()`、`resetFields()` 和 `requestClose()`。`mode="view"` 时表单只读，底部只显示关闭按钮。
+
+## Permission
+
+权限数据由宿主在安装插件时注入，组件库不依赖 Vuex：
+
+```ts
+Vue.use(Vue2ElementBusiness, {
+  permission: {
+    getPermissions: () => store.getters.permissions,
+    getRoles: () => store.getters.roles
+  }
+})
+```
+
+```vue
+<x-permission permission="system:user:add">
+  <el-button type="primary">新增</el-button>
+</x-permission>
+
+<el-button v-permission="['system:user:edit', 'system:user:remove']">
+  编辑或删除
+</el-button>
+
+<el-button v-permission.all="['system:user:edit', 'system:user:remove']">
+  同时拥有两项权限
+</el-button>
+```
+
+`XPermission` 同时支持 `roles`、`match="any | all"` 和 `fallback` 插槽。指令也可使用对象写法：`v-permission="{ roles: ['admin'], match: 'any' }"`。默认将 `*:*:*` 权限和 `admin` 角色视为超级权限，可通过 `superPermissions`、`superRoles` 覆盖；复杂规则可注入同步 `check(context)`。
+
+## Descriptions
+
+`XDescriptions` 用配置统一详情页字段、空值、字典和格式化逻辑：
+
+```vue
+<x-descriptions :data="detail" :items="detailItems" :column="2">
+  <template #actions="{ row }">
+    <el-link :href="row.profileUrl">查看资料</el-link>
+  </template>
+</x-descriptions>
+```
+
+```ts
+const detailItems = [
+  { prop: 'userName', label: '用户名称' },
+  { prop: 'dept.deptName', label: '部门' },
+  { prop: 'status', label: '状态', dictOptions: statusOptions },
+  { prop: 'balance', label: '余额', formatter: (value) => formatMoney(Number(value)) },
+  { prop: 'profileUrl', label: '操作', slotName: 'actions' }
+]
+```
+
+字段支持点路径和数组路径，例如 `dept.name`、`roles[0].name`。`visible: false` 可隐藏字段，`empty-text` 默认是 `--`。
+
+## ImportDialog / ExportButton
+
+导入组件只负责选择、校验、进度、取消和结果反馈，请求仍由宿主注入：
+
+```vue
+<x-import-dialog
+  v-model="importVisible"
+  :request="importUsers"
+  :template-download="downloadTemplate"
+  show-update-existing
+  @success="table.refresh()"
+/>
+```
+
+```ts
+const importUsers: ImportRequest = async ({
+  file,
+  fieldName,
+  data,
+  updateExisting,
+  signal,
+  onProgress
+}) => {
+  const formData = new FormData()
+  Object.entries(data).forEach(([key, value]) => formData.append(key, String(value)))
+  formData.append(fieldName, file)
+
+  return request.post('/system/user/importData', formData, {
+    params: { updateSupport: updateExisting },
+    signal,
+    onUploadProgress: ({ loaded, total }) => onProgress(total ? (loaded / total) * 100 : 0)
+  })
+}
+```
+
+请求返回 `{ successCount?, failureCount?, message?, errors? }`。失败明细会保留在弹窗内；公开方法为 `submit()`、`abort()` 和 `clear()`。
+
+导出按钮复用 `AsyncButton` 的确认、防重复和 loading 行为，并使用 `@amusite/utils` 下载 Blob：
+
+```vue
+<x-export-button
+  :request="() => request.download('/system/user/export', { params: query })"
+  :transform-result="({ data, fileName }) => ({ data, fileName: fileName || '用户数据.xlsx' })"
+  confirm="确认导出当前筛选结果吗？"
+>
+  导出
+</x-export-button>
+```
+
+`request` 最终应返回 Blob、ArrayBuffer、字符串或 `{ data, fileName?, type? }`。SSR、桌面端容器等特殊环境可通过 `download(file)` 接管保存行为。
 
 ## Loading
 

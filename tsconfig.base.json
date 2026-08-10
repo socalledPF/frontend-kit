@@ -10,6 +10,7 @@
       "@amusite/utils": ["packages/utils/src/index.ts"],
       "@amusite/request": ["packages/request/src/index.ts"],
       "@amusite/vue-core": ["packages/vue-core/src/index.ts"],
+      "@amusite/vue2-element-business": ["packages/vue2-element-business/src/index.ts"],
       "@amusite/styles": ["packages/styles/src/index.ts"]
     },
     "strict": true,

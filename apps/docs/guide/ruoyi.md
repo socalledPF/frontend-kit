@@ -56,7 +56,31 @@ export const request = createRequest({
 - `DictTag` / `XDictTag`
 - `DictSelect` / `XDictSelect`
 - `TableToolbar` / `XTableToolbar`
+- `FormDialog` / `XFormDialog`
+- `Permission` / `XPermission`，以及 `v-permission`
+- `Descriptions` / `XDescriptions`
+- `ImportDialog` / `XImportDialog`
+- `ExportButton` / `XExportButton`
 
 原有 `fields`、`columns`、`slotName`、`headerSlotName`、`update:page`、`update:limit` 和 `pagination` 事件可以继续使用。
 
 上传组件不读取 token，也不固定解析 `/common/upload` 响应。宿主通过 `UploadRequest` 使用已有 `request.post()`，在回调内构造 FormData 并将响应映射为 `UploadItem`；完整示例见 [Vue2 Element Business](/guide/vue2-element-business#upload)。
+
+## 权限接入
+
+可直接将 RuoYi store 中的权限和角色注入组件库：
+
+```ts
+Vue.use(Vue2ElementBusiness, {
+  permission: {
+    getPermissions: () => store.getters.permissions,
+    getRoles: () => store.getters.roles
+  }
+})
+```
+
+之后可以用 `v-permission="'system:user:add'"` 或 `<x-permission permission="system:user:add">` 控制业务操作。组件和指令使用同一个判定入口，不直接导入宿主 store。
+
+## 导入导出
+
+`XImportDialog` 的 `request` 对接 `/system/user/importData`，在宿主内构造 FormData，并将后端返回值转换为 `ImportResult`。`XExportButton` 可以直接接收 `request.download()` 的 `{ data, fileName }` 结果。完整代码见 [ImportDialog / ExportButton](/guide/vue2-element-business#importdialog-exportbutton)。

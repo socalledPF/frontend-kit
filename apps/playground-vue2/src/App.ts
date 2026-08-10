@@ -2,6 +2,10 @@ import Vue, { type CreateElement, type VNode } from 'vue'
 import { defineComponent, ref } from 'vue-demi'
 import { useDict, useTable } from '@amusite/vue-core'
 import type {
+  DescriptionItem,
+  ExportFile,
+  ImportRequestContext,
+  ImportResult,
   PaginationPayload,
   ProTableColumn,
   QueryFormField,
@@ -14,6 +18,9 @@ interface UserRow {
   userId: number
   userName: string
   status: '0' | '1'
+  dept?: {
+    deptName: string
+  }
 }
 
 interface UserQuery {
@@ -21,10 +28,15 @@ interface UserQuery {
   status: string
 }
 
+interface UserForm {
+  userName: string
+  status: '0' | '1'
+}
+
 const mockUsers: UserRow[] = [
-  { userId: 1, userName: 'admin', status: '0' },
-  { userId: 2, userName: 'editor', status: '0' },
-  { userId: 3, userName: 'disabled-user', status: '1' }
+  { userId: 1, userName: 'admin', status: '0', dept: { deptName: '研发中心' } },
+  { userId: 2, userName: 'editor', status: '0', dept: { deptName: '内容运营' } },
+  { userId: 3, userName: 'disabled-user', status: '1', dept: { deptName: '客户服务' } }
 ]
 
 function wait(duration: number, signal?: AbortSignal): Promise<void> {
@@ -110,17 +122,64 @@ function mockUpload({ file, signal, onProgress }: UploadRequestContext): Promise
   })
 }
 
+async function mockImport({
+  file,
+  updateExisting,
+  signal,
+  onProgress
+}: ImportRequestContext): Promise<ImportResult> {
+  for (const percentage of [20, 45, 70, 100]) {
+    await wait(140, signal)
+    onProgress(percentage)
+  }
+
+  return {
+    successCount: updateExisting ? 3 : 2,
+    failureCount: 1,
+    message: `${file.name} 导入完成`,
+    errors: [{ row: 4, field: 'userName', message: '用户名称已存在' }]
+  }
+}
+
+async function mockExport(): Promise<ExportFile> {
+  await wait(650)
+  const rows = [
+    '用户ID,用户名称,状态',
+    ...mockUsers.map(
+      (row) => `${row.userId},${row.userName},${row.status === '0' ? '正常' : '停用'}`
+    )
+  ]
+
+  return {
+    data: `\uFEFF${rows.join('\n')}`,
+    fileName: '用户数据.csv',
+    type: 'text/csv;charset=utf-8'
+  }
+}
+
 export default defineComponent({
   name: 'App',
   setup() {
     const uploadedFiles = ref<UploadItem[]>([])
     const uploadedImages = ref<UploadItem[]>([])
     const showSearch = ref(true)
+    const formDialogVisible = ref(false)
+    const importDialogVisible = ref(false)
+    const formMode = ref<'create' | 'edit'>('create')
+    const userForm = ref<UserForm>({ userName: '', status: '0' })
+    const selectedUser = ref<UserRow>(mockUsers[0])
     const tableDensity = ref<TableDensity>('medium')
     const columns = ref<ProTableColumn[]>([
       { prop: 'userId', label: 'ID', width: 80 },
       { prop: 'userName', label: '用户名称' },
-      { prop: 'status', label: '状态', slotName: 'status' }
+      { prop: 'status', label: '状态', slotName: 'status' },
+      {
+        prop: 'actions',
+        label: '操作',
+        width: 150,
+        slotName: 'actions',
+        columnSetting: false
+      }
     ])
     const statusDict = useDict({
       loader: async () => [
@@ -167,9 +226,16 @@ export default defineComponent({
       uploadedFiles,
       uploadedImages,
       showSearch,
+      formDialogVisible,
+      importDialogVisible,
+      formMode,
+      userForm,
+      selectedUser,
       tableDensity,
       columns,
       uploadRequest: mockUpload,
+      importRequest: mockImport,
+      exportRequest: mockExport,
       handleFileUploadChange: (value: UploadItem[]) => {
         uploadedFiles.value = value
       },
@@ -184,9 +250,52 @@ export default defineComponent({
         { prop: 'status', label: '状态', slotName: 'status' }
       ] as QueryFormField[],
       statusOptions: statusDict.optionsMap,
+      detailItems: [
+        { prop: 'userId', label: '用户 ID' },
+        { prop: 'userName', label: '用户名称' },
+        { prop: 'dept.deptName', label: '所属部门' },
+        { prop: 'status', label: '状态', slotName: 'detailStatus' }
+      ] as DescriptionItem[],
+      userRules: {
+        userName: [{ required: true, message: '请输入用户名称', trigger: 'blur' }],
+        status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+      },
       mockAsyncAction: async () => {
         await wait(800)
         return { savedAt: Date.now() }
+      },
+      saveUser: async (model: UserForm) => {
+        await wait(700)
+        return {
+          ...model,
+          userId: formMode.value === 'edit' ? selectedUser.value.userId : Date.now()
+        }
+      },
+      openCreateDialog: () => {
+        formMode.value = 'create'
+        userForm.value = { userName: '', status: '0' }
+        formDialogVisible.value = true
+      },
+      openEditDialog: (row: UserRow) => {
+        selectedUser.value = row
+        formMode.value = 'edit'
+        userForm.value = { userName: row.userName, status: row.status }
+        formDialogVisible.value = true
+      },
+      handleFormVisible: (value: boolean) => {
+        formDialogVisible.value = value
+      },
+      handleFormModel: (model: UserForm) => {
+        userForm.value = model
+      },
+      openImportDialog: () => {
+        importDialogVisible.value = true
+      },
+      handleImportVisible: (value: boolean) => {
+        importDialogVisible.value = value
+      },
+      selectUser: (row: UserRow) => {
+        selectedUser.value = row
       },
       handleShowSearchChange: (value: boolean) => {
         showSearch.value = value
@@ -268,19 +377,49 @@ export default defineComponent({
             refresh: this.search
           },
           scopedSlots: {
-            left: () =>
+            left: () => [
+              h('x-permission', { props: { permission: 'system:user:add' } }, [
+                h(
+                  'el-button',
+                  {
+                    props: { type: 'primary', size: 'small', icon: 'el-icon-plus' },
+                    on: { click: this.openCreateDialog }
+                  },
+                  ['新增']
+                )
+              ]),
+              h(
+                'el-button',
+                {
+                  directives: [{ name: 'permission', value: 'system:user:import' }],
+                  props: { size: 'small', icon: 'el-icon-upload2' },
+                  on: { click: this.openImportDialog }
+                },
+                ['导入']
+              ),
+              h(
+                'x-export-button',
+                {
+                  props: {
+                    request: this.exportRequest,
+                    confirm: '确认导出当前用户数据吗？',
+                    type: 'default'
+                  }
+                },
+                ['导出']
+              ),
               h(
                 'x-async-button',
                 {
                   props: {
                     action: this.mockAsyncAction,
                     confirm: '确认执行模拟异步操作吗？',
-                    type: 'primary',
-                    icon: 'el-icon-plus'
+                    icon: 'el-icon-check'
                   }
                 },
                 ['异步操作']
               )
+            ]
           }
         }),
         h('pro-table', {
@@ -305,7 +444,41 @@ export default defineComponent({
                   value: row.status,
                   options: statusOptions
                 }
-              })
+              }),
+            actions: ({ row }: { row: UserRow }) => [
+              h(
+                'el-button',
+                {
+                  props: { type: 'text', size: 'small' },
+                  on: { click: () => this.selectUser(row) }
+                },
+                ['详情']
+              ),
+              h('x-permission', { props: { permission: 'system:user:edit' } }, [
+                h(
+                  'el-button',
+                  {
+                    props: { type: 'text', size: 'small' },
+                    on: { click: () => this.openEditDialog(row) }
+                  },
+                  ['编辑']
+                )
+              ])
+            ]
+          }
+        })
+      ]),
+      h('section', { class: 'x-admin-section' }, [
+        h('h2', { class: 'playground-section-title' }, ['用户详情']),
+        h('x-descriptions', {
+          props: {
+            data: this.selectedUser,
+            items: this.detailItems,
+            column: 2
+          },
+          scopedSlots: {
+            detailStatus: ({ value }: { value: string }) =>
+              h('x-dict-tag', { props: { value, options: statusOptions } })
           }
         })
       ]),
@@ -354,7 +527,52 @@ export default defineComponent({
             )
           ])
         ])
-      ])
+      ]),
+      h('x-form-dialog', {
+        props: {
+          value: this.formDialogVisible,
+          model: this.userForm,
+          mode: this.formMode,
+          title: this.formMode === 'edit' ? '编辑用户' : '新增用户',
+          rules: this.userRules,
+          submit: this.saveUser,
+          confirmClose: true,
+          appendToBody: true
+        },
+        on: {
+          input: this.handleFormVisible,
+          'update:model': this.handleFormModel,
+          success: this.search
+        },
+        scopedSlots: {
+          default: ({ model }: { model: UserForm }) => [
+            h('el-form-item', { props: { label: '用户名称', prop: 'userName' } }, [
+              h('el-input', {
+                props: { value: model.userName, placeholder: '请输入用户名称' },
+                on: { input: (value: string) => (model.userName = value) }
+              })
+            ]),
+            h('el-form-item', { props: { label: '状态', prop: 'status' } }, [
+              h('x-dict-select', {
+                props: { value: model.status, options: statusOptions },
+                on: { input: (value: '0' | '1') => (model.status = value) }
+              })
+            ])
+          ]
+        }
+      }),
+      h('x-import-dialog', {
+        props: {
+          value: this.importDialogVisible,
+          request: this.importRequest,
+          showUpdateExisting: true,
+          appendToBody: true
+        },
+        on: {
+          input: this.handleImportVisible,
+          success: this.search
+        }
+      })
     ])
   }
 })

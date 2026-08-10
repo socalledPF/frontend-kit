@@ -1,3 +1,15 @@
+html,
+body,
+#app {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 .playground-section-title {
   margin: 0 0 18px;
   color: var(--x-text-color);
@@ -43,6 +55,11 @@
 }
 
 @media (max-width: 600px) {
+  .x-admin-page,
+  .x-admin-section {
+    min-width: 0;
+  }
+
   .x-pro-table .x-pagination {
     box-sizing: border-box;
     width: 100%;

@@ -8,8 +8,15 @@ import AsyncButton from './components/AsyncButton'
 import DictTag from './components/DictTag'
 import DictSelect from './components/DictSelect'
 import TableToolbar from './components/TableToolbar'
+import FormDialog from './components/FormDialog'
+import Permission, { configurePermission, PermissionDirective } from './components/Permission'
+import Descriptions from './components/Descriptions'
+import ImportDialog from './components/ImportDialog'
+import ExportButton from './components/ExportButton'
+import type { PermissionProvider } from './types'
 
 export * from './types'
+export { checkPermission, configurePermission, PermissionDirective } from './components/Permission'
 export {
   QueryForm,
   ProTable,
@@ -19,7 +26,12 @@ export {
   AsyncButton,
   DictTag,
   DictSelect,
-  TableToolbar
+  TableToolbar,
+  FormDialog,
+  Permission,
+  Descriptions,
+  ImportDialog,
+  ExportButton
 }
 export const XSearchForm = QueryForm
 export const XDataTable = ProTable
@@ -30,16 +42,24 @@ export const XAsyncButton: typeof AsyncButton = AsyncButton
 export const XDictTag: typeof DictTag = DictTag
 export const XDictSelect: typeof DictSelect = DictSelect
 export const XTableToolbar: typeof TableToolbar = TableToolbar
+export const XFormDialog: typeof FormDialog = FormDialog
+export const XPermission: typeof Permission = Permission
+export const XDescriptions: typeof Descriptions = Descriptions
+export const XImportDialog: typeof ImportDialog = ImportDialog
+export const XExportButton: typeof ExportButton = ExportButton
 
 export interface Vue2ElementBusinessPluginOptions {
   prefix?: string
   registerCompatibleNames?: boolean
+  permission?: PermissionProvider
+  registerPermissionDirective?: boolean
 }
 
 export const Vue2ElementBusiness: PluginObject<Vue2ElementBusinessPluginOptions> = {
   install(Vue: VueConstructor, options: Vue2ElementBusinessPluginOptions = {}) {
     const prefix = options.prefix ?? 'X'
     const registerCompatibleNames = options.registerCompatibleNames ?? true
+    configurePermission(options.permission)
 
     Vue.component(`${prefix}SearchForm`, QueryForm)
     Vue.component(`${prefix}DataTable`, ProTable)
@@ -50,6 +70,15 @@ export const Vue2ElementBusiness: PluginObject<Vue2ElementBusinessPluginOptions>
     Vue.component(`${prefix}DictTag`, DictTag)
     Vue.component(`${prefix}DictSelect`, DictSelect)
     Vue.component(`${prefix}TableToolbar`, TableToolbar)
+    Vue.component(`${prefix}FormDialog`, FormDialog)
+    Vue.component(`${prefix}Permission`, Permission)
+    Vue.component(`${prefix}Descriptions`, Descriptions)
+    Vue.component(`${prefix}ImportDialog`, ImportDialog)
+    Vue.component(`${prefix}ExportButton`, ExportButton)
+
+    if ((options.registerPermissionDirective ?? true) && typeof Vue.directive === 'function') {
+      Vue.directive('permission', PermissionDirective)
+    }
 
     if (registerCompatibleNames) {
       Vue.component('QueryForm', QueryForm)
@@ -61,6 +90,11 @@ export const Vue2ElementBusiness: PluginObject<Vue2ElementBusinessPluginOptions>
       Vue.component('DictTag', DictTag)
       Vue.component('DictSelect', DictSelect)
       Vue.component('TableToolbar', TableToolbar)
+      Vue.component('FormDialog', FormDialog)
+      Vue.component('Permission', Permission)
+      Vue.component('Descriptions', Descriptions)
+      Vue.component('ImportDialog', ImportDialog)
+      Vue.component('ExportButton', ExportButton)
     }
   }
 }
