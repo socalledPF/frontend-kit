@@ -1,26 +1,9 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
+import { getByPath } from '@amusite/business-core'
 import type { DescriptionItem } from '../types'
 import DictTag from './DictTag'
 
 type DescriptionRow = Record<string, unknown>
-
-function getByPath(source: unknown, path: string): unknown {
-  if (!path) {
-    return source
-  }
-
-  return path
-    .replace(/\[(\w+)\]/g, '.$1')
-    .split('.')
-    .filter(Boolean)
-    .reduce<unknown>((value, key) => {
-      if (!value || typeof value !== 'object') {
-        return undefined
-      }
-
-      return (value as Record<string, unknown>)[key]
-    }, source)
-}
 
 function isEmptyDisplayValue(value: unknown): boolean {
   return value === undefined || value === null || value === ''

@@ -2,7 +2,7 @@
 
 面向后台管理系统的前端业务开发加速器。
 
-首版优先服务 Vue2 + Element-UI + RuoYi 场景，提供稳定的工具函数、请求适配、Vue hooks 和样式变量。组件层会在底座验证后继续补齐。
+同时服务 Vue2 + Element-UI 与 Vue3 + Element Plus 的 RuoYi 后台场景，提供稳定的工具函数、请求适配、Vue hooks 和完整业务组件。
 
 ## Packages
 
@@ -11,6 +11,8 @@
 - `@amusite/request`：适配器驱动的请求封装。
 - `@amusite/vue-core`：`useTable`、`useDict`、`useModal`、`useSelection`。
 - `@amusite/vue2-element-business`：Vue2 + Element-UI 业务组件。
+- `@amusite/vue3-element-plus-business`：Vue3 + Element Plus 业务组件。
+- `@amusite/business-core`：两套业务组件共享的类型、校验与纯函数。
 - `@amusite/styles`：CSS Variables 和后台布局 helper。
 
 [开始使用](/guide/quick-start)

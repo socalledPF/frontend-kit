@@ -24,7 +24,9 @@ export default defineConfig({
             { text: 'Request', link: '/guide/request' },
             { text: 'Utils', link: '/guide/utils' },
             { text: 'Vue Core', link: '/guide/vue-core' },
-            { text: 'Vue2 Element Business', link: '/guide/vue2-element-business' }
+            { text: 'Vue2 Element Business', link: '/guide/vue2-element-business' },
+            { text: 'Vue3 Element Plus Business', link: '/guide/vue3-element-plus-business' },
+            { text: 'Vue2 迁移 Vue3', link: '/guide/vue2-to-vue3' }
           ]
         }
       ]

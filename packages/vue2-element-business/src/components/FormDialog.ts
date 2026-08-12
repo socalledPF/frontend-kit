@@ -1,4 +1,5 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
+import { cloneValue, isEqualValue } from '@amusite/business-core'
 import type {
   FormDialogBeforeClose,
   FormDialogCloseContext,
@@ -8,62 +9,6 @@ import type {
 
 type FormModel = Record<string, unknown>
 type CloseReason = FormDialogCloseContext['reason']
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-
-  const prototype = Object.getPrototypeOf(value)
-  return prototype === Object.prototype || prototype === null
-}
-
-function cloneValue<T>(value: T): T {
-  if (value instanceof Date) {
-    return new Date(value.getTime()) as T
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => cloneValue(item)) as T
-  }
-
-  if (isPlainObject(value)) {
-    return Object.keys(value).reduce<Record<string, unknown>>((result, key) => {
-      result[key] = cloneValue(value[key])
-      return result
-    }, {}) as T
-  }
-
-  return value
-}
-
-function isEqual(left: unknown, right: unknown): boolean {
-  if (Object.is(left, right)) {
-    return true
-  }
-
-  if (left instanceof Date && right instanceof Date) {
-    return left.getTime() === right.getTime()
-  }
-
-  if (Array.isArray(left) && Array.isArray(right)) {
-    return left.length === right.length && left.every((item, index) => isEqual(item, right[index]))
-  }
-
-  if (isPlainObject(left) && isPlainObject(right)) {
-    const leftKeys = Object.keys(left)
-    const rightKeys = Object.keys(right)
-
-    return (
-      leftKeys.length === rightKeys.length &&
-      leftKeys.every(
-        (key) => Object.prototype.hasOwnProperty.call(right, key) && isEqual(left[key], right[key])
-      )
-    )
-  }
-
-  return false
-}
 
 export default Vue.extend({
   name: 'FormDialog',
@@ -186,7 +131,7 @@ export default Vue.extend({
     model: {
       deep: true,
       handler(this: any, model: FormModel) {
-        if (this.syncingModel || isEqual(model, this.innerModel)) {
+        if (this.syncingModel || isEqualValue(model, this.innerModel)) {
           return
         }
 
@@ -200,7 +145,7 @@ export default Vue.extend({
           return
         }
 
-        const dirty = !isEqual(model, this.initialSnapshot)
+        const dirty = !isEqualValue(model, this.initialSnapshot)
         if (dirty !== this.dirty) {
           this.dirty = dirty
           this.$emit('dirty-change', dirty)

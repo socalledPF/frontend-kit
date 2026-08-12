@@ -24,11 +24,21 @@
     "@eslint/js": "^9.30.0",
     "@types/node": "^20.14.0",
     "eslint": "^9.30.0",
+    "eslint-plugin-vue": "^10.3.0",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0",
     "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "packageExtensions": {
+      "@vue/test-utils@2.4.6": {
+        "peerDependencies": {
+          "vue": "^3.3.0"
+        }
+      }
+    }
   }
 }

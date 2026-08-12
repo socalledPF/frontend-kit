@@ -4,8 +4,8 @@ import Vue, {
   type VNode,
   type VNodeDirective
 } from 'vue'
+import { evaluatePermission } from '@amusite/business-core'
 import type {
-  PermissionCheckContext,
   PermissionChecker,
   PermissionDirectiveValue,
   PermissionMatchMode,
@@ -17,29 +17,6 @@ const DEFAULT_PROVIDER: PermissionProvider = {}
 const originalDisplay = new WeakMap<HTMLElement, string>()
 let permissionProvider: PermissionProvider = DEFAULT_PROVIDER
 
-function toValues(value?: PermissionRequirement | readonly string[]): string[] {
-  if (!value) {
-    return []
-  }
-
-  return (Array.isArray(value) ? value : [value]).map((item) => String(item).trim()).filter(Boolean)
-}
-
-function matchesRequirement(
-  requirement: PermissionRequirement | undefined,
-  available: string[],
-  match: PermissionMatchMode
-): boolean {
-  const expected = toValues(requirement)
-  if (expected.length === 0) {
-    return true
-  }
-
-  return match === 'all'
-    ? expected.every((item) => available.includes(item))
-    : expected.some((item) => available.includes(item))
-}
-
 export function configurePermission(provider: PermissionProvider = DEFAULT_PROVIDER): void {
   permissionProvider = provider
 }
@@ -48,34 +25,7 @@ export function checkPermission(
   options: PermissionDirectiveValue = {},
   provider: PermissionProvider = permissionProvider
 ): boolean {
-  const match = options.match === 'all' ? 'all' : 'any'
-  const permissions = toValues(provider.getPermissions?.())
-  const currentRoles = toValues(provider.getRoles?.())
-  const context: PermissionCheckContext = {
-    permission: options.permission,
-    roles: options.roles,
-    match,
-    permissions,
-    currentRoles
-  }
-  const checker = options.checker || provider.check
-
-  if (checker) {
-    return checker(context)
-  }
-
-  const superPermissions = toValues(provider.superPermissions || ['*:*:*'])
-  const superRoles = toValues(provider.superRoles || ['admin'])
-  const permissionGranted =
-    !options.permission ||
-    superPermissions.some((item) => permissions.includes(item)) ||
-    matchesRequirement(options.permission, permissions, match)
-  const roleGranted =
-    !options.roles ||
-    superRoles.some((item) => currentRoles.includes(item)) ||
-    matchesRequirement(options.roles, currentRoles, match)
-
-  return permissionGranted && roleGranted
+  return evaluatePermission(options, provider)
 }
 
 function normalizeDirectiveValue(binding: VNodeDirective): PermissionDirectiveValue {

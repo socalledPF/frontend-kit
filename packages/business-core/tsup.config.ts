@@ -7,10 +7,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
-  external: ['vue', 'element-ui', '@amusite/business-core', '@amusite/utils'],
   outExtension({ format }) {
-    return {
-      js: format === 'esm' ? '.mjs' : '.cjs'
-    }
+    return { js: format === 'esm' ? '.mjs' : '.cjs' }
   }
 })

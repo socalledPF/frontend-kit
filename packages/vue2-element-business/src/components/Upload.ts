@@ -1,4 +1,12 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
+import {
+  clampPercentage,
+  cloneUploadItem,
+  formatFileSize,
+  getErrorMessage,
+  matchesFileAccept,
+  normalizeUploadItem
+} from '@amusite/business-core'
 import type {
   UploadChangeDetail,
   UploadData,
@@ -10,19 +18,6 @@ import type {
 } from '../types'
 
 const BYTES_PER_MEGABYTE = 1024 * 1024
-const IMAGE_EXTENSIONS = [
-  '.apng',
-  '.avif',
-  '.bmp',
-  '.gif',
-  '.ico',
-  '.jpeg',
-  '.jpg',
-  '.png',
-  '.svg',
-  '.webp'
-]
-
 let uploadUidSeed = 0
 
 interface RuntimeUploadFile extends UploadFileState {
@@ -45,92 +40,6 @@ function createUploadUid(): string {
   return `x-upload-${Date.now()}-${uploadUidSeed}`
 }
 
-function clampPercentage(value: unknown): number {
-  const percentage = Number(value)
-
-  if (!Number.isFinite(percentage)) {
-    return 0
-  }
-
-  return Math.min(100, Math.max(0, Math.round(percentage)))
-}
-
-function formatFileSize(size?: number): string {
-  if (!size || size <= 0) {
-    return ''
-  }
-
-  if (size < 1024) {
-    return `${size} B`
-  }
-
-  if (size < BYTES_PER_MEGABYTE) {
-    return `${(size / 1024).toFixed(1)} KB`
-  }
-
-  return `${(size / BYTES_PER_MEGABYTE).toFixed(1)} MB`
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-
-  if (typeof error === 'string' && error) {
-    return error
-  }
-
-  return '上传失败，请重试'
-}
-
-function getFileExtension(fileName: string): string {
-  const dotIndex = fileName.lastIndexOf('.')
-  return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : ''
-}
-
-function matchesAccept(file: File, accept: string): boolean {
-  const rules = accept
-    .split(',')
-    .map((rule) => rule.trim().toLowerCase())
-    .filter(Boolean)
-
-  if (rules.length === 0) {
-    return true
-  }
-
-  const fileType = (file.type || '').toLowerCase()
-  const extension = getFileExtension(file.name)
-
-  return rules.some((rule) => {
-    if (rule === '*/*') {
-      return true
-    }
-
-    if (rule.startsWith('.')) {
-      return extension === rule
-    }
-
-    if (rule.endsWith('/*')) {
-      const typePrefix = rule.slice(0, -1)
-
-      if (fileType.startsWith(typePrefix)) {
-        return true
-      }
-
-      return rule === 'image/*' && IMAGE_EXTENSIONS.includes(extension)
-    }
-
-    return fileType === rule
-  })
-}
-
-function cloneUploadItem(item: UploadItem): UploadItem {
-  return {
-    ...item,
-    meta: item.meta ? { ...item.meta } : undefined
-  }
-}
-
 function getUploadItemIdentity(item: UploadItem): string {
   if (item.uid) {
     return `uid:${item.uid}`
@@ -145,23 +54,6 @@ function getUploadItemIdentity(item: UploadItem): string {
   }
 
   return `file:${item.name}:${item.size ?? ''}`
-}
-
-function normalizeUploadItem(result: unknown, file: File, uid: string): UploadItem {
-  if (!result || typeof result !== 'object' || Array.isArray(result)) {
-    throw new Error('上传请求必须返回 UploadItem 对象')
-  }
-
-  const item = result as UploadItem
-
-  return {
-    ...item,
-    uid: item.uid || uid,
-    name: item.name || file.name,
-    size: item.size ?? file.size,
-    type: item.type || file.type || undefined,
-    meta: item.meta ? { ...item.meta } : undefined
-  }
 }
 
 function isSameRawFile(left: RuntimeUploadFile, right: File): boolean {
@@ -443,7 +335,7 @@ export default Vue.extend({
         return
       }
 
-      if (!matchesAccept(rawFile, this.resolvedAccept)) {
+      if (!matchesFileAccept(rawFile, this.resolvedAccept)) {
         this.reportValidation('type', `文件 ${rawFile.name} 的类型不符合要求`, rawFile)
         return
       }
@@ -472,7 +364,7 @@ export default Vue.extend({
         } catch (error) {
           this.reportValidation(
             'before-upload',
-            getErrorMessage(error) || `文件 ${rawFile.name} 未通过上传校验`,
+            getErrorMessage(error, `文件 ${rawFile.name} 未通过上传校验`),
             rawFile,
             error
           )
@@ -678,7 +570,7 @@ export default Vue.extend({
 
       file.status = 'error'
       file.error = error
-      file.errorMessage = getErrorMessage(error)
+      file.errorMessage = getErrorMessage(error, '上传失败，请重试')
       this.completeTask(uid, runId)
       this.$emit('error', error, snapshotUploadFile(file))
     },

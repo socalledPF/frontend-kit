@@ -1,4 +1,10 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
+import {
+  clampPercentage,
+  formatFileSize,
+  getErrorMessage,
+  matchesFileAccept
+} from '@amusite/business-core'
 import type {
   ImportData,
   ImportRequest,
@@ -12,57 +18,6 @@ const BYTES_PER_MEGABYTE = 1024 * 1024
 interface ElementUploadFile {
   name?: string
   raw?: File
-}
-
-function clampPercentage(value: unknown): number {
-  const number = Number(value)
-  return Number.isFinite(number) ? Math.max(0, Math.min(100, Math.round(number))) : 0
-}
-
-function getExtension(fileName: string): string {
-  const index = fileName.lastIndexOf('.')
-  return index >= 0 ? fileName.slice(index).toLowerCase() : ''
-}
-
-function matchesAccept(file: File, accept: string): boolean {
-  const rules = accept
-    .split(',')
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean)
-
-  if (rules.length === 0) {
-    return true
-  }
-
-  const extension = getExtension(file.name)
-  const type = (file.type || '').toLowerCase()
-
-  return rules.some((rule) => {
-    if (rule.startsWith('.')) {
-      return extension === rule
-    }
-    if (rule.endsWith('/*')) {
-      return type.startsWith(rule.slice(0, -1))
-    }
-    return type === rule
-  })
-}
-
-function formatFileSize(size: number): string {
-  if (size < 1024) {
-    return `${size} B`
-  }
-  if (size < BYTES_PER_MEGABYTE) {
-    return `${(size / 1024).toFixed(1)} KB`
-  }
-  return `${(size / BYTES_PER_MEGABYTE).toFixed(1)} MB`
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-  return typeof error === 'string' && error ? error : '导入失败，请重试'
 }
 
 export default Vue.extend({
@@ -207,7 +162,7 @@ export default Vue.extend({
       return false
     },
     validateFile(this: any, file: File): boolean {
-      if (!matchesAccept(file, this.accept)) {
+      if (!matchesFileAccept(file, this.accept)) {
         return this.emitValidationError('type', `请选择 ${this.accept} 格式的文件`, file)
       }
 
@@ -311,7 +266,7 @@ export default Vue.extend({
           }
 
           this.status = 'error'
-          this.errorMessage = getErrorMessage(error)
+          this.errorMessage = getErrorMessage(error, '导入失败，请重试')
           this.$emit('error', error, file)
           throw error
         } finally {

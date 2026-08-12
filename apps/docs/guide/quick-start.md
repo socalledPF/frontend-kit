@@ -1,6 +1,23 @@
 # 快速开始
 
-## 安装
+## Vue3 项目
+
+```bash
+pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/vue3-element-plus-business @amusite/styles
+pnpm add axios vue@^3.3 element-plus@^2.7 vue-demi
+```
+
+```ts
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import Vue3ElementPlusBusiness from '@amusite/vue3-element-plus-business'
+import '@amusite/vue3-element-plus-business/style.css'
+
+createApp(App).use(ElementPlus).use(Vue3ElementPlusBusiness).mount('#app')
+```
+
+## Vue2 项目
 
 ```bash
 pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/vue2-element-business @amusite/styles
@@ -20,14 +37,14 @@ import VueCompositionApi from '@vue/composition-api'
 Vue.use(VueCompositionApi)
 ```
 
-## 引入样式
+### 引入样式
 
 ```ts
 import '@amusite/styles/style.css'
 import '@amusite/vue2-element-business/style.css'
 ```
 
-## 注册 Vue2 业务组件
+### 注册业务组件
 
 ```ts
 import Vue2ElementBusiness from '@amusite/vue2-element-business'
