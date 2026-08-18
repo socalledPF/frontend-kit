@@ -16,6 +16,7 @@ import type {
   UploadValidationError,
   UploadValidationErrorCode
 } from '../types'
+import { getBusinessContext } from '../context'
 
 const BYTES_PER_MEGABYTE = 1024 * 1024
 let uploadUidSeed = 0
@@ -331,17 +332,29 @@ export default Vue.extend({
       }
 
       if (this.multiple && this.limit > 0 && this.limitFileCount >= this.limit) {
-        this.reportValidation('limit', `最多只能上传 ${this.limit} 个文件`, rawFile)
+        this.reportValidation(
+          'limit',
+          getBusinessContext(this).t('upload.limit', { limit: this.limit }),
+          rawFile
+        )
         return
       }
 
       if (!matchesFileAccept(rawFile, this.resolvedAccept)) {
-        this.reportValidation('type', `文件 ${rawFile.name} 的类型不符合要求`, rawFile)
+        this.reportValidation(
+          'type',
+          getBusinessContext(this).t('upload.type', { name: rawFile.name }),
+          rawFile
+        )
         return
       }
 
       if (this.maxSizeMb > 0 && rawFile.size > this.maxSizeMb * BYTES_PER_MEGABYTE) {
-        this.reportValidation('size', `文件 ${rawFile.name} 不能超过 ${this.maxSizeMb} MB`, rawFile)
+        this.reportValidation(
+          'size',
+          getBusinessContext(this).t('upload.size', { name: rawFile.name, size: this.maxSizeMb }),
+          rawFile
+        )
         return
       }
 
@@ -349,7 +362,11 @@ export default Vue.extend({
         !this.allowDuplicate &&
         this.files.some((file: RuntimeUploadFile) => isSameRawFile(file, rawFile))
       ) {
-        this.reportValidation('duplicate', `文件 ${rawFile.name} 已存在`, rawFile)
+        this.reportValidation(
+          'duplicate',
+          getBusinessContext(this).t('upload.duplicate', { name: rawFile.name }),
+          rawFile
+        )
         return
       }
 
@@ -358,13 +375,20 @@ export default Vue.extend({
           const accepted = await this.beforeUpload(rawFile, this.getSuccessfulValue())
 
           if (accepted === false) {
-            this.reportValidation('before-upload', `文件 ${rawFile.name} 未通过上传校验`, rawFile)
+            this.reportValidation(
+              'before-upload',
+              getBusinessContext(this).t('upload.beforeRejected', { name: rawFile.name }),
+              rawFile
+            )
             return
           }
         } catch (error) {
           this.reportValidation(
             'before-upload',
-            getErrorMessage(error, `文件 ${rawFile.name} 未通过上传校验`),
+            getErrorMessage(
+              error,
+              getBusinessContext(this).t('upload.beforeRejected', { name: rawFile.name })
+            ),
             rawFile,
             error
           )
@@ -428,7 +452,7 @@ export default Vue.extend({
       }
 
       if (typeof this.request !== 'function') {
-        const error = new Error('Upload 组件缺少 request 回调')
+        const error = new Error(getBusinessContext(this).t('upload.missingRequest'))
         file.status = 'error'
         file.error = error
         file.errorMessage = error.message
@@ -570,8 +594,16 @@ export default Vue.extend({
 
       file.status = 'error'
       file.error = error
-      file.errorMessage = getErrorMessage(error, '上传失败，请重试')
+      file.errorMessage = getErrorMessage(
+        error,
+        getBusinessContext(this).t('common.operationFailed')
+      )
       this.completeTask(uid, runId)
+      getBusinessContext(this).notifyError?.(error, {
+        source: 'Upload',
+        action: 'upload',
+        metadata: { name: file.name }
+      })
       this.$emit('error', error, snapshotUploadFile(file))
     },
     completeTask(this: any, uid: string, runId: number) {
@@ -647,7 +679,11 @@ export default Vue.extend({
       }
 
       if (this.multiple && this.limit > 0 && this.limitFileCount >= this.limit) {
-        this.reportValidation('limit', `最多只能上传 ${this.limit} 个文件`, file.file)
+        this.reportValidation(
+          'limit',
+          getBusinessContext(this).t('upload.limit', { limit: this.limit }),
+          file.file
+        )
         return
       }
 
@@ -768,24 +804,44 @@ export default Vue.extend({
 
       if (file.url) {
         actions.push(
-          this.renderActionButton(h, 'el-icon-zoom-in', '预览', () => this.openPreview(file))
+          this.renderActionButton(
+            h,
+            'el-icon-zoom-in',
+            getBusinessContext(this).t('common.preview'),
+            () => this.openPreview(file)
+          )
         )
       }
 
       if (file.status === 'error') {
         actions.push(
-          this.renderActionButton(h, 'el-icon-refresh-right', '重试', () => this.retry(file.uid))
+          this.renderActionButton(
+            h,
+            'el-icon-refresh-right',
+            getBusinessContext(this).t('common.retry'),
+            () => this.retry(file.uid)
+          )
         )
       }
 
       if (file.status === 'queued' || file.status === 'uploading') {
         actions.push(
-          this.renderActionButton(h, 'el-icon-video-pause', '取消上传', () => this.abort(file.uid))
+          this.renderActionButton(
+            h,
+            'el-icon-video-pause',
+            getBusinessContext(this).t('upload.cancelUpload'),
+            () => this.abort(file.uid)
+          )
         )
       }
 
       actions.push(
-        this.renderActionButton(h, 'el-icon-delete', '删除', () => this.remove(file.uid))
+        this.renderActionButton(
+          h,
+          'el-icon-delete',
+          getBusinessContext(this).t('common.remove'),
+          () => this.remove(file.uid)
+        )
       )
       return actions
     },
@@ -829,11 +885,11 @@ export default Vue.extend({
       }
 
       const statusText: Record<string, string> = {
-        ready: '等待上传',
-        queued: '排队中',
-        uploading: `上传中 ${file.percentage}%`,
-        success: '已上传',
-        error: '上传失败'
+        ready: getBusinessContext(this).t('upload.ready'),
+        queued: getBusinessContext(this).t('upload.queued'),
+        uploading: getBusinessContext(this).t('upload.uploading', { percent: file.percentage }),
+        success: getBusinessContext(this).t('upload.success'),
+        error: getBusinessContext(this).t('upload.failed')
       }
       const meta = [formatFileSize(file.size), statusText[file.status]].filter(Boolean).join(' · ')
 
@@ -911,7 +967,7 @@ export default Vue.extend({
           file.status === 'error'
             ? h('div', { class: 'x-upload__image-error' }, [
                 h('i', { class: 'el-icon-warning-outline', attrs: { 'aria-hidden': 'true' } }),
-                h('span', [file.errorMessage || '上传失败'])
+                h('span', [file.errorMessage || getBusinessContext(this).t('upload.failed')])
               ])
             : null
         ]
@@ -943,8 +999,8 @@ export default Vue.extend({
             attrs: { 'aria-hidden': 'true' }
           }),
           h('div', { class: 'x-upload__drag-text' }, [
-            '将文件拖到此处，或',
-            h('span', ['点击选择'])
+            getBusinessContext(this).t('upload.dropText'),
+            h('span', [getBusinessContext(this).t('upload.clickText')])
           ])
         ])
       }
@@ -955,8 +1011,18 @@ export default Vue.extend({
           {
             class: 'x-upload__image-trigger',
             attrs: {
-              title: '选择图片',
-              'aria-label': '选择图片'
+              title: getBusinessContext(this).t('upload.selectImage'),
+              'aria-label': getBusinessContext(this).t('upload.selectImage'),
+              role: 'button',
+              tabindex: '0'
+            },
+            on: {
+              keydown: (event: KeyboardEvent) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  ;(event.currentTarget as HTMLElement).click()
+                }
+              }
             }
           },
           [h('i', { class: 'el-icon-plus', attrs: { 'aria-hidden': 'true' } })]
@@ -973,7 +1039,7 @@ export default Vue.extend({
             disabled: this.disabled
           }
         },
-        ['选择文件']
+        [getBusinessContext(this).t('upload.selectFile')]
       )
     },
     renderSelector(this: any, h: CreateElement): VNode {

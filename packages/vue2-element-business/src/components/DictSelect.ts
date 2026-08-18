@@ -1,5 +1,6 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import type { BusinessDictOption } from '../types'
+import { getBusinessContext } from '../context'
 
 export default Vue.extend({
   name: 'DictSelect',
@@ -38,7 +39,7 @@ export default Vue.extend({
     },
     placeholder: {
       type: String,
-      default: '请选择'
+      default: ''
     },
     size: {
       type: String,
@@ -91,7 +92,7 @@ export default Vue.extend({
           disabled: this.disabled,
           loading: this.loading,
           collapseTags: this.collapseTags,
-          placeholder: this.placeholder,
+          placeholder: this.placeholder || getBusinessContext(this).t('dict.placeholder'),
           size: this.size
         },
         on: {

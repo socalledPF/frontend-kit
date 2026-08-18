@@ -18,17 +18,19 @@ import '@amusite/vue3-element-plus-business/style.css'
 createApp(App).use(ElementPlus).use(Vue3ElementPlusBusiness).mount('#app')
 ```
 
-默认注册 `QueryForm / XSearchForm`、`ProTable / XDataTable`、`Pagination / XPagination`，以及 Loading、Upload、AsyncButton、DictTag、DictSelect、TableToolbar、FormDialog、Permission、Descriptions、ImportDialog 和 ExportButton 的普通名称与 `X` 别名。
+默认注册 `QueryForm / XQueryForm / XSearchForm`、`ProTable / XProTable / XDataTable`、`Pagination / XPagination`，以及 Loading、Upload、AsyncButton、DictTag、DictSelect、TableToolbar、FormDialog、Permission、Descriptions、ImportDialog 和 ExportButton 的普通名称与 `X` 别名。
+
+组件支持子路径按需导入：
+
+```ts
+import Upload from '@amusite/vue3-element-plus-business/upload'
+import '@amusite/vue3-element-plus-business/style.css'
+```
 
 ## 查询表格
 
 ```vue
-<x-search-form
-  v-model:model="query"
-  :fields="fields"
-  @query="table.search"
-  @reset="table.reset"
-/>
+<x-search-form v-model:model="query" :fields="fields" @query="table.search" @reset="table.reset" />
 
 <x-table-toolbar
   v-model:show-search="showSearch"
@@ -97,7 +99,7 @@ const uploadRequest: UploadRequest = async ({ file, fieldName, data, signal, onP
 
   const result = await request.post('/common/upload', body, {
     signal,
-    onUploadProgress: ({ loaded, total }) => onProgress(total ? loaded / total * 100 : 0)
+    onUploadProgress: ({ loaded, total }) => onProgress(total ? (loaded / total) * 100 : 0)
   })
 
   return {
@@ -149,3 +151,13 @@ app.use(Vue3ElementPlusBusiness, {
 ```
 
 导入请求接收 `AbortSignal` 和进度回调，取消后会忽略迟到结果。导出请求返回 Blob、ArrayBuffer、字符串或 `{ data, fileName?, type? }`，也可以使用 `download(file)` 接管桌面端保存行为。
+
+## Vue3 新组件
+
+- `XRemoteSelect`：远程搜索、防抖、缓存和迟到响应隔离。
+- `XDrawerForm`：抽屉表单、脏数据关闭保护和异步提交。
+- `XEditableTable`：单元格/行编辑、增删、校验和模型同步。
+- `XStatusSwitch`：确认、乐观更新与失败回滚。
+- `XFilePreview`：图片、PDF、文本预览及宿主下载适配。
+
+这些组件只进入 Vue3 主线，Vue2 包继续兼容维护。完整 props、事件、插槽和方法见 [组件 API 总览](/guide/component-api)。

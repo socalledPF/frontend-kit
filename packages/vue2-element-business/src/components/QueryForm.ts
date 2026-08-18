@@ -1,5 +1,6 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import type { QueryFormBreakpointCols, QueryFormField, QueryFormModel } from '../types'
+import { getBusinessContext } from '../context'
 
 const DEFAULT_BREAKPOINT_COLS: Required<QueryFormBreakpointCols> = {
   xs: 1,
@@ -69,19 +70,19 @@ export default Vue.extend({
     },
     queryText: {
       type: String,
-      default: '查询'
+      default: ''
     },
     resetText: {
       type: String,
-      default: '重置'
+      default: ''
     },
     expandText: {
       type: String,
-      default: '展开'
+      default: ''
     },
     collapseText: {
       type: String,
-      default: '收起'
+      default: ''
     }
   },
   data() {
@@ -91,8 +92,7 @@ export default Vue.extend({
       modelReference: null,
       expanded: false,
       resetVersion: 0,
-      windowWidth:
-        typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1920,
+      windowWidth: typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1920,
       syncingFromInner: false
     }
   },
@@ -254,12 +254,17 @@ export default Vue.extend({
     },
     getMergedComponentProps(this: any, field: QueryFormField) {
       const props = { ...(field.componentProps || {}) }
+      const componentName = this.normalizeComponentName(this.resolveFieldComponent(field))
+
+      // Element UI's ElInput exposes its native accessible name through the
+      // `label` prop and otherwise overrides an aria-label forwarded as $attrs.
+      if (componentName === 'el-input' && !Object.prototype.hasOwnProperty.call(props, 'label')) {
+        props.label = field.label
+      }
 
       if (Object.prototype.hasOwnProperty.call(props, 'clearable')) {
         return props
       }
-
-      const componentName = this.normalizeComponentName(this.resolveFieldComponent(field))
 
       if (this.shouldAutoClearable(componentName)) {
         props.clearable = true
@@ -380,6 +385,7 @@ export default Vue.extend({
 
       return h(this.resolveFieldComponent(field), {
         key: this.getFieldControlKey(field, index),
+        attrs: { 'aria-label': field.label },
         props: {
           value: this.getFieldValue(field),
           ...this.getMergedComponentProps(field)
@@ -461,7 +467,7 @@ export default Vue.extend({
                           click: this.handleQuery
                         }
                       },
-                      [this.queryText]
+                      [this.queryText || getBusinessContext(this).t('query.search')]
                     )
                   : null,
                 this.showActions
@@ -476,7 +482,7 @@ export default Vue.extend({
                           click: this.handleReset
                         }
                       },
-                      [this.resetText]
+                      [this.resetText || getBusinessContext(this).t('query.reset')]
                     )
                   : null,
                 this.shouldShowToggle
@@ -492,7 +498,9 @@ export default Vue.extend({
                         }
                       },
                       [
-                        this.expanded ? this.collapseText : this.expandText,
+                        this.expanded
+                          ? this.collapseText || getBusinessContext(this).t('query.collapse')
+                          : this.expandText || getBusinessContext(this).t('query.expand'),
                         h('i', {
                           class: this.expanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'
                         })

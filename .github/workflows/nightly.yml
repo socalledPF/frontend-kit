@@ -1,0 +1,63 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 18 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  browsers-and-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm build
+      - run: pnpm test:e2e:all
+
+  peer-consumers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - consumer: vue2
+            vue: 2.6.14
+            ui: 2.15.14
+          - consumer: vue2
+            vue: 2.7.16
+            ui: 2.15.14
+          - consumer: vue3
+            vue: 3.3.0
+            ui: 2.7.0
+          - consumer: vue3
+            vue: latest
+            ui: latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: node scripts/check-consumers.mjs
+        env:
+          AMUSITE_CONSUMER: ${{ matrix.consumer }}
+          AMUSITE_TEST_VUE_VERSION: ${{ matrix.vue }}
+          AMUSITE_TEST_UI_VERSION: ${{ matrix.ui }}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useAsyncAction, useDict, useModal, useSelection, useTable } from './index'
+import { useAsyncAction, useCrudPage, useDict, useModal, useSelection, useTable } from './index'
 
 interface Deferred<T> {
   promise: Promise<T>
@@ -213,5 +213,102 @@ describe('@amusite/vue-core', () => {
     await expect(state.run()).resolves.toBeUndefined()
     expect(state.status.value).toBe('error')
     expect(state.error.value).toEqual(new Error('save failed'))
+  })
+
+  it('combines schema projections and CRUD page workflows', async () => {
+    const request = vi.fn().mockResolvedValue({ rows: [{ id: 1, name: 'Ada' }], total: 1 })
+    const save = vi.fn().mockResolvedValue({ id: 2 })
+    const remove = vi.fn().mockResolvedValue(true)
+    const crud = useCrudPage<{ id: number; name: string }, { keyword?: string }>({
+      schema: [
+        { prop: 'id', label: 'ID', table: true, detail: true, defaultValue: 0 },
+        { prop: 'name', label: 'Name', query: true, form: true, table: true, defaultValue: '' }
+      ],
+      table: { request, immediate: false },
+      rowKey: (row) => row.id,
+      createModel: () => ({ name: 'New' }),
+      save,
+      remove
+    })
+
+    expect(crud.queryFields).toEqual([{ prop: 'name', label: 'Name' }])
+    expect(crud.tableColumns).toHaveLength(2)
+    expect(crud.formFields).toEqual([{ prop: 'name', label: 'Name' }])
+    expect(crud.descriptionItems).toEqual([{ prop: 'id', label: 'ID' }])
+
+    crud.openCreate()
+    expect(crud.formModel.value).toEqual({ id: 0, name: 'New' })
+    crud.formModel.value.name = 'Created'
+    await crud.submit()
+    expect(save).toHaveBeenCalledWith({ id: 0, name: 'Created' }, 'create', undefined)
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(crud.modal.visible.value).toBe(false)
+
+    const row = { id: 1, name: 'Ada' }
+    crud.openEdit(row)
+    expect(crud.formModel.value).toEqual(row)
+    expect(crud.formModel.value).not.toBe(row)
+    crud.selection.setSelection([row])
+    await crud.removeRows()
+    expect(remove).toHaveBeenCalledWith([row])
+    expect(crud.selection.selected.value).toEqual([])
+    expect(request).toHaveBeenCalledTimes(2)
+
+    crud.openView(row)
+    await expect(crud.submit()).resolves.toBeUndefined()
+    await expect(crud.removeRows()).resolves.toBeUndefined()
+    expect(save).toHaveBeenCalledTimes(1)
+    expect(remove).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports CRUD action failures without closing the editor', async () => {
+    const onError = vi.fn()
+    const crud = useCrudPage<{ id: number }>({
+      schema: [{ prop: 'id', label: 'ID', form: true }],
+      table: { request: async () => ({ rows: [], total: 0 }), immediate: false },
+      save: async () => {
+        throw new Error('save failed')
+      },
+      remove: async () => {
+        throw new Error('remove failed')
+      },
+      onError
+    })
+
+    crud.openCreate()
+    await expect(crud.submit()).rejects.toThrow('save failed')
+    expect(crud.modal.visible.value).toBe(true)
+    expect(onError).toHaveBeenCalledWith(expect.any(Error), 'save')
+
+    await expect(crud.removeRows([{ id: 1 }])).rejects.toThrow('remove failed')
+    expect(onError).toHaveBeenCalledWith(expect.any(Error), 'remove')
+  })
+
+  it('covers uncached dictionaries, modal setters and reference selection', async () => {
+    const loader = vi.fn(async (type: string) => [{ label: type, value: '1' }])
+    const cache = new Map([['cached', [{ label: 'Cached', value: '0' }]]])
+    const dict = useDict({ loader, cache, immediateTypes: ['initial'] })
+    await vi.waitFor(() => expect(loader).toHaveBeenCalledWith('initial'))
+    await expect(dict.load('cached')).resolves.toEqual([{ label: 'Cached', value: '0' }])
+    await dict.refresh('cached')
+    dict.clearCache('cached')
+    expect(dict.getOptions('cached')).toEqual([])
+    dict.clearCache()
+
+    const modal = useModal<{ id: number }>()
+    modal.setPayload({ id: 1 })
+    modal.setMode('view')
+    modal.toggle()
+    expect(modal.visible.value).toBe(true)
+    modal.toggle(false)
+    expect(modal.mode.value).toBe('view')
+
+    const first = { id: 1 }
+    const selection = useSelection<typeof first>()
+    selection.toggle(first)
+    expect(selection.isSelected(first)).toBe(true)
+    expect(selection.selectedKeys.value).toEqual([])
+    selection.setSelection([])
+    expect(selection.hasSelection.value).toBe(false)
   })
 })

@@ -1,5 +1,6 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import { scrollTo } from '../utils/scrollTo'
+import { getBusinessContext } from '../context'
 
 function getDefaultPagerCount(): number {
   if (typeof document === 'undefined') {
@@ -67,13 +68,35 @@ export default Vue.extend({
       }
     }
   },
+  mounted(this: any) {
+    this.patchAccessibility()
+  },
+  updated(this: any) {
+    this.patchAccessibility()
+  },
   methods: {
+    patchAccessibility(this: any) {
+      this.$nextTick(() => {
+        const root = this.$el as HTMLElement | undefined
+        root
+          ?.querySelector('.btn-prev')
+          ?.setAttribute('aria-label', getBusinessContext(this).t('table.previousPage'))
+        root
+          ?.querySelector('.btn-next')
+          ?.setAttribute('aria-label', getBusinessContext(this).t('table.nextPage'))
+        root
+          ?.querySelector('.el-pagination__sizes input')
+          ?.setAttribute('aria-label', getBusinessContext(this).t('table.pageSize'))
+        root
+          ?.querySelector('.el-pagination__jump input')
+          ?.setAttribute('aria-label', getBusinessContext(this).t('table.jumpToPage'))
+      })
+    },
     handleSizeChange(this: any, value: number) {
-      if (this.currentPage * value > this.total) {
-        this.currentPage = 1
-      }
+      const page = this.currentPage * value > this.total ? 1 : this.currentPage
+      if (page !== this.currentPage) this.currentPage = page
 
-      this.$emit('pagination', { page: this.currentPage, limit: value })
+      this.$emit('pagination', { page, limit: value })
 
       if (this.autoScroll) {
         scrollTo(0, 800)

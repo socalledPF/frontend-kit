@@ -98,12 +98,7 @@ export type UploadBeforeRemove = (
   currentValue: UploadItem[]
 ) => boolean | Promise<boolean>
 export type UploadValidationErrorCode =
-  | 'limit'
-  | 'type'
-  | 'size'
-  | 'duplicate'
-  | 'before-upload'
-  | 'config'
+  'limit' | 'type' | 'size' | 'duplicate' | 'before-upload' | 'config'
 
 export interface UploadValidationError {
   code: UploadValidationErrorCode
@@ -121,9 +116,7 @@ export interface UploadChangeDetail {
 }
 
 export type AsyncButtonConfirm =
-  | string
-  | boolean
-  | ((...args: unknown[]) => boolean | Promise<boolean>)
+  string | boolean | ((...args: unknown[]) => boolean | Promise<boolean>)
 
 export type DictValue = string | number
 
@@ -248,8 +241,7 @@ export type ImportRequest<Result extends ImportResult = ImportResult> = (
 ) => Promise<Result>
 
 export type ImportData =
-  | Record<string, unknown>
-  | ((file: File, updateExisting: boolean) => Record<string, unknown>)
+  Record<string, unknown> | ((file: File, updateExisting: boolean) => Record<string, unknown>)
 
 export type ImportValidationErrorCode = 'type' | 'size' | 'before-import' | 'config'
 
@@ -267,3 +259,41 @@ export interface ExportFile {
 }
 
 export type ExportResult = Blob | ArrayBuffer | string | ExportFile
+
+export interface RemoteSelectRequestContext {
+  keyword: string
+  requestId: number
+  signal?: AbortSignal
+}
+
+export type RemoteSelectRequest<Value extends DictValue = DictValue> = (
+  keyword: string,
+  context: RemoteSelectRequestContext
+) => Promise<BusinessDictOption<Value>[]>
+
+export interface EditableTableColumn<
+  Row extends object = Record<string, unknown>
+> extends ProTableColumn {
+  editable?: boolean | ((row: Row, index: number) => boolean)
+  editor?: string | object
+  editorProps?: Record<string, unknown> | ((row: Row, index: number) => Record<string, unknown>)
+  rules?: unknown[]
+  editorSlotName?: string
+}
+
+export type EditableTableChangeType = 'add' | 'remove' | 'edit' | 'reset'
+
+export interface EditableTableChangeDetail<Row extends object = Record<string, unknown>> {
+  type: EditableTableChangeType
+  row?: Row
+  index?: number
+  prop?: string
+  previousValue?: unknown
+  value?: unknown
+}
+
+export type FilePreviewKind = 'image' | 'pdf' | 'video' | 'audio' | 'text' | 'unsupported'
+
+export interface FilePreviewItem extends UploadItem {
+  data?: Blob | ArrayBuffer | string
+}

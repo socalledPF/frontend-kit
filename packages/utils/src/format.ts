@@ -49,13 +49,7 @@ export function formatMoney(
   value: string | number | null | undefined,
   options: MoneyFormatOptions = {}
 ): string {
-  const {
-    precision = 2,
-    prefix = '',
-    suffix = '',
-    thousands = true,
-    nullText = ''
-  } = options
+  const { precision = 2, prefix = '', suffix = '', thousands = true, nullText = '' } = options
 
   if (value == null || value === '') {
     return nullText

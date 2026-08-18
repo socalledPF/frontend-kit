@@ -24,8 +24,7 @@ export interface PageResult<T> {
   raw?: unknown
 }
 
-export interface DictOption<Value extends string | number = string | number>
-  extends Recordable {
+export interface DictOption<Value extends string | number = string | number> extends Recordable {
   label: string
   value: Value
   disabled?: boolean
@@ -41,6 +40,21 @@ export interface RequestAdapter {
   resolveErrorMessage?: (error: unknown) => string
   onError?: (message: string, error: unknown) => void
   onUnauthorized?: (payload: unknown) => MaybePromise<void>
+  refreshToken?: (payload: unknown) => MaybePromise<string | null | undefined>
+  shouldRefreshToken?: (payload: unknown) => boolean
+  requestIdHeader?: string | false
+  createRequestId?: () => string
+  onRequest?: (config: unknown, context: RequestLifecycleContext) => MaybePromise<void>
+  onResponse?: (response: unknown, context: RequestLifecycleContext) => MaybePromise<void>
+  onSettled?: (context: RequestLifecycleContext & { error?: unknown }) => MaybePromise<void>
+}
+
+export interface RequestLifecycleContext {
+  requestId: string
+  startedAt: number
+  durationMs?: number
+  method?: string
+  url?: string
 }
 
 export type TableRequest<T, Q extends object = Recordable> = (

@@ -4,26 +4,26 @@ Vue3 包保留 Vue2 包的组件名称、业务类型、插槽名称和主要事
 
 ## 包与入口
 
-| Vue2 | Vue3 |
-| --- | --- |
-| `@amusite/vue2-element-business` | `@amusite/vue3-element-plus-business` |
-| `Vue.use(ElementUI)` | `app.use(ElementPlus)` |
-| `Vue.use(Vue2ElementBusiness)` | `app.use(Vue3ElementPlusBusiness)` |
-| `element-ui/lib/theme-chalk/index.css` | `element-plus/dist/index.css` |
+| Vue2                                   | Vue3                                  |
+| -------------------------------------- | ------------------------------------- |
+| `@amusite/vue2-element-business`       | `@amusite/vue3-element-plus-business` |
+| `Vue.use(ElementUI)`                   | `app.use(ElementPlus)`                |
+| `Vue.use(Vue2ElementBusiness)`         | `app.use(Vue3ElementPlusBusiness)`    |
+| `element-ui/lib/theme-chalk/index.css` | `element-plus/dist/index.css`         |
 
 ## 模型迁移
 
-| Vue2 | Vue3 |
-| --- | --- |
-| `<x-upload v-model="files" />` | 不变 |
-| `<x-dict-select v-model="status" />` | 不变 |
-| `:model.sync="query"` | `v-model:model="query"` |
-| `:page.sync="page"` | `v-model:page="page"` |
-| `:limit.sync="limit"` | `v-model:limit="limit"` |
-| `:columns.sync="columns"` | `v-model:columns="columns"` |
-| `:density.sync="density"` | `v-model:density="density"` |
-| `:show-search.sync="showSearch"` | `v-model:show-search="showSearch"` |
-| `:update-existing.sync="value"` | `v-model:update-existing="value"` |
+| Vue2                                 | Vue3                               |
+| ------------------------------------ | ---------------------------------- |
+| `<x-upload v-model="files" />`       | 不变                               |
+| `<x-dict-select v-model="status" />` | 不变                               |
+| `:model.sync="query"`                | `v-model:model="query"`            |
+| `:page.sync="page"`                  | `v-model:page="page"`              |
+| `:limit.sync="limit"`                | `v-model:limit="limit"`            |
+| `:columns.sync="columns"`            | `v-model:columns="columns"`        |
+| `:density.sync="density"`            | `v-model:density="density"`        |
+| `:show-search.sync="showSearch"`     | `v-model:show-search="showSearch"` |
+| `:update-existing.sync="value"`      | `v-model:update-existing="value"`  |
 
 Vue3 默认模型事件为 `update:modelValue`，具名模型使用 `update:model`、`update:page` 等原生协议。不再发出 Vue2 的 `input` 事件。
 

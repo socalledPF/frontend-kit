@@ -1,3 +1,15 @@
 packages:
   - apps/*
   - packages/*
+
+packageExtensions:
+  '@vue/test-utils@2.4.6':
+    peerDependencies:
+      vue: ^3.3.0
+  'vue-template-compiler@2.6.14':
+    peerDependencies:
+      vue: 2.6.14
+
+allowBuilds:
+  esbuild: true
+  vue-demi: true

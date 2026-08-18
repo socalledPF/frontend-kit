@@ -81,3 +81,7 @@ await saveAction.execute()
 ```
 
 返回 `loading`、`status`、`result`、`error`、`execute/run()` 和 `reset()`。`before` 返回 `false` 时状态变为 `cancelled`，不会执行 action；需要在 hook 内吞掉错误时设置 `throwOnError: false`。
+
+## useCrudPage
+
+`useCrudPage` 组合 `useTable`、选择状态、编辑模型以及保存/删除动作，但不生成固定页面结构。复杂业务仍用 QueryForm、ProTable 和 FormDialog 自由组合。完整示例见 [Schema 与 useCrudPage](/guide/schema-crud)。

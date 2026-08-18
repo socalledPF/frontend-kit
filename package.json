@@ -2,43 +2,53 @@
   "name": "frontend-kit",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
-  "packageManager": "pnpm@8.5.0",
+  "packageManager": "pnpm@11.18.0",
   "engines": {
-    "node": ">=18.18"
+    "node": ">=22.12"
   },
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage --concurrency=1",
+    "test:e2e": "playwright test --project=chromium-desktop --project=chromium-mobile",
+    "test:e2e:all": "playwright test",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "dev:docs": "pnpm --filter @amusite/docs dev",
-    "docs:build": "pnpm --filter @amusite/docs build",
-    "docs:preview": "pnpm --filter @amusite/docs preview",
+    "format:check": "prettier --check .",
+    "ci": "corepack pnpm format:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm build && corepack pnpm docs:build && corepack pnpm api:check && corepack pnpm check:packages && corepack pnpm check:consumers && corepack pnpm check:size",
+    "dev:docs": "corepack pnpm --filter @amusite/docs dev",
+    "docs:build": "corepack pnpm --filter @amusite/docs build",
+    "docs:preview": "corepack pnpm --filter @amusite/docs preview",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "corepack pnpm ci && changeset publish",
+    "release:next": "corepack pnpm ci && changeset publish --tag next",
+    "release:promote": "node scripts/promote-release.mjs latest",
+    "api:report": "corepack pnpm build && node scripts/run-api-extractor.mjs --local",
+    "api:check": "node scripts/run-api-extractor.mjs",
+    "check:packages": "node scripts/check-packages.mjs",
+    "check:consumers": "node scripts/check-consumers.mjs",
+    "check:size": "node scripts/check-size.mjs"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@axe-core/playwright": "^4.10.2",
     "@changesets/cli": "^2.29.5",
     "@eslint/js": "^9.30.0",
-    "@types/node": "^20.14.0",
+    "@microsoft/api-extractor": "^7.52.11",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.30.0",
     "eslint-plugin-vue": "^10.3.0",
+    "publint": "^0.3.12",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0",
-    "vitest": "^3.2.4"
-  },
-  "pnpm": {
-    "packageExtensions": {
-      "@vue/test-utils@2.4.6": {
-        "peerDependencies": {
-          "vue": "^3.3.0"
-        }
-      }
-    }
+    "vitest": "^4.1.10"
   }
 }

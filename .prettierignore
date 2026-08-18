@@ -1,0 +1,11 @@
+**/dist
+**/coverage
+**/.turbo
+**/.vitepress/cache
+**/.vitepress/dist
+node_modules
+playwright-report
+test-results
+pnpm-lock.yaml
+packages/*/etc/*.api.md
+

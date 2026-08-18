@@ -1,0 +1,53 @@
+{
+  "name": "create-amusite-admin",
+  "version": "0.1.0",
+  "description": "Scaffold an Amusite Vue 3 admin application.",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/socalledPF/frontend-kit.git",
+    "directory": "packages/create-amusite-admin"
+  },
+  "keywords": [
+    "amusite",
+    "scaffold",
+    "vue3",
+    "ruoyi"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "type": "module",
+  "bin": {
+    "create-amusite-admin": "./dist/cli.mjs"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "sideEffects": false
+}

@@ -333,6 +333,7 @@ export default defineComponent({
       update: (value: string) => void
     }) =>
       h('x-dict-select', {
+        attrs: { 'aria-label': '状态' },
         props: {
           value,
           options: statusOptions,

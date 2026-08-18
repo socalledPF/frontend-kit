@@ -108,7 +108,7 @@ export default Vue.extend({
       'el-descriptions',
       {
         class: 'x-descriptions',
-        attrs: this.$attrs,
+        attrs: { tabindex: '0', ...this.$attrs },
         props: {
           title: this.title,
           column: Math.max(1, Number(this.column) || 1),

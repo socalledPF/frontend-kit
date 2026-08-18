@@ -1,0 +1,45 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Publish candidate or promote tested versions
+        type: choice
+        options: [next, latest]
+        default: next
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: private-registry
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: ${{ vars.NPM_REGISTRY_URL }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm ci
+      - name: Publish candidate
+        if: inputs.channel == 'next'
+        run: pnpm changeset publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Promote tested versions
+        if: inputs.channel == 'latest'
+        run: pnpm release:promote
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Push generated tags
+        if: inputs.channel == 'next'
+        run: git push --follow-tags

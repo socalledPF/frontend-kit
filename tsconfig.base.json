@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2019", "DOM"],
+    "lib": ["ES2022", "DOM"],
     "baseUrl": ".",
     "paths": {
       "@amusite/shared": ["packages/shared/src/index.ts"],
@@ -11,6 +11,7 @@
       "@amusite/request": ["packages/request/src/index.ts"],
       "@amusite/vue-core": ["packages/vue-core/src/index.ts"],
       "@amusite/business-core": ["packages/business-core/src/index.ts"],
+      "@amusite/ruoyi-adapter": ["packages/ruoyi-adapter/src/index.ts"],
       "@amusite/vue2-element-business": ["packages/vue2-element-business/src/index.ts"],
       "@amusite/vue3-element-plus-business": ["packages/vue3-element-plus-business/src/index.ts"],
       "@amusite/styles": ["packages/styles/src/index.ts"]
@@ -19,6 +20,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": true,

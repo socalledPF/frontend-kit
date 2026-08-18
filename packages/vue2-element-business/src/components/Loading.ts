@@ -1,4 +1,5 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
+import { getBusinessContext } from '../context'
 
 let bodyLockCount = 0
 let originalBodyOverflow = ''
@@ -44,7 +45,7 @@ export default Vue.extend({
     },
     text: {
       type: String,
-      default: '加载中...'
+      default: undefined
     },
     fullscreen: {
       type: Boolean,
@@ -233,11 +234,13 @@ export default Vue.extend({
         return tipSlot
       }
 
-      if (!this.text) {
+      const text = this.text === undefined ? getBusinessContext(this).t('loading.text') : this.text
+
+      if (!text) {
         return null
       }
 
-      return h('span', { class: 'x-loading__text' }, [this.text])
+      return h('span', { class: 'x-loading__text' }, [text])
     }
   },
   render(this: any, h: CreateElement): VNode {
@@ -263,7 +266,8 @@ export default Vue.extend({
             attrs: {
               role: 'status',
               'aria-live': 'polite',
-              'aria-label': this.text || '加载中'
+              'aria-label':
+                this.text === undefined ? getBusinessContext(this).t('loading.text') : this.text
             }
           },
           [h('div', { class: 'x-loading__indicator' }, [this.renderSpinner(h), this.renderTip(h)])]

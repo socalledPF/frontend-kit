@@ -14,5 +14,7 @@
 - `@amusite/vue3-element-plus-business`：Vue3 + Element Plus 业务组件。
 - `@amusite/business-core`：两套业务组件共享的类型、校验与纯函数。
 - `@amusite/styles`：CSS Variables 和后台布局 helper。
+- `@amusite/ruoyi-adapter`：RuoYi 响应、分页、字典和文件流程适配。
+- `create-amusite-admin`：Vue3 + Element Plus + RuoYi preset 脚手架。
 
 [开始使用](/guide/quick-start)

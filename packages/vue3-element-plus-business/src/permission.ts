@@ -8,22 +8,39 @@ import type {
 
 export const permissionProviderKey: InjectionKey<PermissionProvider> = Symbol('amusite-permission')
 
-function normalizeValue(value: PermissionDirectiveValue | PermissionRequirement | undefined, all = false): PermissionDirectiveValue {
+function normalizeValue(
+  value: PermissionDirectiveValue | PermissionRequirement | undefined,
+  all = false
+): PermissionDirectiveValue {
   if (typeof value === 'string' || Array.isArray(value)) {
     return { permission: value, match: all ? 'all' : 'any' }
   }
   return { ...(value || {}), match: all ? 'all' : value?.match }
 }
 
-export function checkPermission(options: PermissionDirectiveValue = {}, provider: PermissionProvider = {}): boolean {
+export function checkPermission(
+  options: PermissionDirectiveValue = {},
+  provider: PermissionProvider = {}
+): boolean {
   return evaluatePermission(options, provider)
 }
 
-export function createPermissionDirective(provider: PermissionProvider = {}): Directive<HTMLElement, PermissionDirectiveValue | PermissionRequirement> {
+export function createPermissionDirective(
+  provider: PermissionProvider = {}
+): Directive<HTMLElement, PermissionDirectiveValue | PermissionRequirement> {
   const displays = new WeakMap<HTMLElement, string>()
-  const update = (element: HTMLElement, binding: { value?: PermissionDirectiveValue | PermissionRequirement; modifiers?: Partial<Record<string, boolean>> }) => {
+  const update = (
+    element: HTMLElement,
+    binding: {
+      value?: PermissionDirectiveValue | PermissionRequirement
+      modifiers?: Partial<Record<string, boolean>>
+    }
+  ) => {
     if (!displays.has(element)) displays.set(element, element.style.display)
-    element.style.display = evaluatePermission(normalizeValue(binding.value, binding.modifiers?.all), provider)
+    element.style.display = evaluatePermission(
+      normalizeValue(binding.value, binding.modifiers?.all),
+      provider
+    )
       ? displays.get(element) || ''
       : 'none'
   }

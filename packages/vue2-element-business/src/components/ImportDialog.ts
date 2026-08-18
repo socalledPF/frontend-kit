@@ -12,6 +12,7 @@ import type {
   ImportValidationError,
   ImportValidationErrorCode
 } from '../types'
+import { getBusinessContext } from '../context'
 
 const BYTES_PER_MEGABYTE = 1024 * 1024
 
@@ -34,7 +35,7 @@ export default Vue.extend({
     },
     title: {
       type: String,
-      default: '导入数据'
+      default: ''
     },
     width: {
       type: String,
@@ -70,7 +71,7 @@ export default Vue.extend({
     },
     updateExistingText: {
       type: String,
-      default: '更新已存在的数据'
+      default: ''
     },
     templateUrl: {
       type: String,
@@ -82,11 +83,11 @@ export default Vue.extend({
     },
     confirmText: {
       type: String,
-      default: '开始导入'
+      default: ''
     },
     cancelText: {
       type: String,
-      default: '取消'
+      default: ''
     },
     closeOnSuccess: {
       type: Boolean,
@@ -163,11 +164,19 @@ export default Vue.extend({
     },
     validateFile(this: any, file: File): boolean {
       if (!matchesFileAccept(file, this.accept)) {
-        return this.emitValidationError('type', `请选择 ${this.accept} 格式的文件`, file)
+        return this.emitValidationError(
+          'type',
+          getBusinessContext(this).t('import.type', { accept: this.accept }),
+          file
+        )
       }
 
       if (this.maxSizeMb > 0 && file.size > this.maxSizeMb * BYTES_PER_MEGABYTE) {
-        return this.emitValidationError('size', `文件大小不能超过 ${this.maxSizeMb} MB`, file)
+        return this.emitValidationError(
+          'size',
+          getBusinessContext(this).t('import.size', { size: this.maxSizeMb }),
+          file
+        )
       }
 
       return true
@@ -202,7 +211,7 @@ export default Vue.extend({
       const task = (async () => {
         const file = this.selectedFile
         if (!file) {
-          this.emitValidationError('config', '请先选择导入文件')
+          this.emitValidationError('config', getBusinessContext(this).t('import.selectFirst'))
           return undefined
         }
 
@@ -217,7 +226,11 @@ export default Vue.extend({
         }
 
         if (!allowed) {
-          this.emitValidationError('before-import', '文件未通过导入前校验', file)
+          this.emitValidationError(
+            'before-import',
+            getBusinessContext(this).t('import.beforeRejected'),
+            file
+          )
           return undefined
         }
 
@@ -266,7 +279,12 @@ export default Vue.extend({
           }
 
           this.status = 'error'
-          this.errorMessage = getErrorMessage(error, '导入失败，请重试')
+          this.errorMessage = getErrorMessage(error, getBusinessContext(this).t('import.failed'))
+          getBusinessContext(this).notifyError?.(error, {
+            source: 'ImportDialog',
+            action: 'import',
+            metadata: { name: file.name }
+          })
           this.$emit('error', error, file)
           throw error
         } finally {
@@ -349,6 +367,10 @@ export default Vue.extend({
         await this.templateDownload()
         this.$emit('template-success')
       } catch (error) {
+        getBusinessContext(this).notifyError?.(error, {
+          source: 'ImportDialog',
+          action: 'download-template'
+        })
         this.$emit('template-error', error)
       } finally {
         this.templateLoading = false
@@ -362,8 +384,12 @@ export default Vue.extend({
       const result = this.result as ImportResult
       const errors = result.errors || []
       const summary = [
-        result.successCount !== undefined ? `成功 ${result.successCount} 条` : '',
-        result.failureCount !== undefined ? `失败 ${result.failureCount} 条` : ''
+        result.successCount !== undefined
+          ? getBusinessContext(this).t('import.successCount', { count: result.successCount })
+          : '',
+        result.failureCount !== undefined
+          ? getBusinessContext(this).t('import.failureCount', { count: result.failureCount })
+          : ''
       ]
         .filter(Boolean)
         .join('，')
@@ -371,7 +397,7 @@ export default Vue.extend({
       return h('div', { class: 'x-import-dialog__result' }, [
         h('el-alert', {
           props: {
-            title: result.message || summary || '导入完成',
+            title: result.message || summary || getBusinessContext(this).t('import.completed'),
             type: this.resultType,
             closable: false,
             showIcon: true
@@ -383,7 +409,9 @@ export default Vue.extend({
               { class: 'x-import-dialog__error-list' },
               errors.map((error, index) =>
                 h('li', { key: `${error.row || 'row'}-${index}` }, [
-                  error.row ? `第 ${error.row} 行：` : '',
+                  error.row
+                    ? getBusinessContext(this).t('import.rowError', { row: error.row })
+                    : '',
                   error.message
                 ])
               )
@@ -403,7 +431,7 @@ export default Vue.extend({
         attrs: this.$attrs,
         props: {
           visible: this.value,
-          title: this.title,
+          title: this.title || getBusinessContext(this).t('import.title'),
           width: this.width,
           appendToBody: this.appendToBody,
           closeOnClickModal: false,
@@ -419,7 +447,7 @@ export default Vue.extend({
       [
         this.templateDownload || this.templateUrl || templateSlot
           ? h('div', { class: 'x-import-dialog__template' }, [
-              h('span', ['请使用标准导入模板']),
+              h('span', [getBusinessContext(this).t('import.templateHint')]),
               templateSlot ||
                 (this.templateDownload
                   ? h(
@@ -428,7 +456,7 @@ export default Vue.extend({
                         props: { type: 'text', loading: this.templateLoading },
                         on: { click: this.handleTemplateDownload }
                       },
-                      ['下载模板']
+                      [getBusinessContext(this).t('import.downloadTemplate')]
                     )
                   : h(
                       'a',
@@ -436,7 +464,7 @@ export default Vue.extend({
                         class: 'x-import-dialog__template-link',
                         attrs: { href: this.templateUrl, download: '' }
                       },
-                      ['下载模板']
+                      [getBusinessContext(this).t('import.downloadTemplate')]
                     ))
             ])
           : null,
@@ -458,13 +486,19 @@ export default Vue.extend({
           },
           [
             h('i', { class: 'el-icon-upload x-import-dialog__upload-icon' }),
-            h('div', { class: 'el-upload__text' }, ['将文件拖到此处，或', h('em', ['点击选择'])])
+            h('div', { class: 'el-upload__text' }, [
+              getBusinessContext(this).t('upload.dropText'),
+              h('em', [getBusinessContext(this).t('upload.clickText')])
+            ])
           ]
         ),
         tipSlot
           ? h('div', { class: 'x-import-dialog__tip' }, tipSlot)
           : h('div', { class: 'x-import-dialog__tip' }, [
-              `支持 ${this.accept}，文件不超过 ${this.maxSizeMb} MB`
+              getBusinessContext(this).t('import.supportTip', {
+                accept: this.accept,
+                size: this.maxSizeMb
+              })
             ]),
         this.selectedFile
           ? h('div', { class: 'x-import-dialog__file' }, [
@@ -487,7 +521,10 @@ export default Vue.extend({
                   icon: 'el-icon-delete',
                   disabled: this.importing
                 },
-                attrs: { title: '移除文件', 'aria-label': '移除文件' },
+                attrs: {
+                  title: getBusinessContext(this).t('common.remove'),
+                  'aria-label': getBusinessContext(this).t('common.remove')
+                },
                 on: { click: this.clear }
               })
             ])
@@ -500,7 +537,7 @@ export default Vue.extend({
                 props: { value: this.innerUpdateExisting, disabled: this.importing },
                 on: { input: this.handleUpdateExisting }
               },
-              [this.updateExistingText]
+              [this.updateExistingText || getBusinessContext(this).t('import.updateExisting')]
             )
           : null,
         this.validationMessage
@@ -520,7 +557,7 @@ export default Vue.extend({
               props: { size: 'small', disabled: this.importing },
               on: { click: this.handleCancel }
             },
-            [this.cancelText]
+            [this.cancelText || getBusinessContext(this).t('common.cancel')]
           ),
           h(
             'el-button',
@@ -533,7 +570,11 @@ export default Vue.extend({
               },
               on: { click: this.handleSubmit }
             },
-            [this.status === 'error' ? '重新导入' : this.confirmText]
+            [
+              this.status === 'error'
+                ? getBusinessContext(this).t('common.retry')
+                : this.confirmText || getBusinessContext(this).t('import.start')
+            ]
           )
         ])
       ]

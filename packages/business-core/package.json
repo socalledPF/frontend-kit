@@ -1,22 +1,48 @@
 {
   "name": "@amusite/business-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-neutral types and helpers shared by Amusite business components.",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/socalledPF/frontend-kit.git",
+    "directory": "packages/business-core"
+  },
+  "keywords": [
+    "amusite",
+    "business",
+    "components",
+    "contracts"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "scripts": {
     "build": "tsup",
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint \"src/**/*.ts\""
   },

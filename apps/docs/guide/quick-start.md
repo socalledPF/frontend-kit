@@ -1,5 +1,7 @@
 # 快速开始
 
+工具链要求 Node `>=22.12` 和 pnpm `11.18.0`。仓库在 Node 22.12 与 24 上持续验证，Vite 锁定在 8.1.x。
+
 ## Vue3 项目
 
 ```bash
@@ -64,10 +66,10 @@ pnpm dev:docs
 
 ## 发布准备
 
-私有 npm registry 地址暂未固定，先复制 `.npmrc.example` 为 `.npmrc` 并替换为真实地址。
+私有 npm registry 通过 `NPM_REGISTRY_URL` 和 `NPM_TOKEN` 注入，仓库不保存地址和凭据。日常变化通过 Changesets 进入 Release PR，先发布 `next` 验证，再提升为 `latest`。
 
 ```bash
 pnpm changeset
 pnpm version-packages
-pnpm release
+pnpm release:next
 ```

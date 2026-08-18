@@ -1,12 +1,13 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import type { AsyncButtonConfirm } from '../types'
+import { getBusinessContext } from '../context'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message
   }
 
-  return typeof error === 'string' ? error : '操作失败'
+  return typeof error === 'string' ? error : 'Operation failed'
 }
 
 export default Vue.extend({
@@ -102,15 +103,31 @@ export default Vue.extend({
         return (await confirmation(...args)) !== false
       }
 
-      const message = typeof confirmation === 'string' ? confirmation : '确认执行此操作吗？'
+      const business = getBusinessContext(this)
+      const message =
+        typeof confirmation === 'string' ? confirmation : business.t('common.confirmAction')
+      if (business.confirm) {
+        return (
+          (await business.confirm({
+            message,
+            title: this.confirmOptions.title || business.t('common.confirmTitle'),
+            type: 'warning',
+            raw: this.confirmOptions
+          })) !== false
+        )
+      }
       const confirmMethod = this.$confirm
 
       if (typeof confirmMethod !== 'function') {
-        throw new Error('AsyncButton 使用确认文案时需要先注册 Element-UI MessageBox')
+        throw new Error('AsyncButton confirmation requires an Element-UI MessageBox adapter')
       }
 
       try {
-        await confirmMethod(message, this.confirmOptions.title || '提示', this.confirmOptions)
+        await confirmMethod(
+          message,
+          this.confirmOptions.title || business.t('common.confirmTitle'),
+          this.confirmOptions
+        )
         return true
       } catch {
         return false
@@ -126,6 +143,9 @@ export default Vue.extend({
       }
 
       const task = (async () => {
+        const startedAt = Date.now()
+        const business = getBusinessContext(this)
+        business.telemetry?.({ name: 'async-button', phase: 'start' })
         try {
           const confirmed = await this.resolveConfirmation(args)
 
@@ -142,9 +162,21 @@ export default Vue.extend({
           this.runningCount += 1
           this.setInnerLoading(true)
           const result = await this.action(...args)
+          business.telemetry?.({
+            name: 'async-button',
+            phase: 'success',
+            durationMs: Date.now() - startedAt
+          })
           this.$emit('success', result, ...args)
           return result
         } catch (error) {
+          business.notifyError?.(error, { source: 'AsyncButton', action: 'execute' })
+          business.telemetry?.({
+            name: 'async-button',
+            phase: 'error',
+            durationMs: Date.now() - startedAt,
+            error
+          })
           this.$emit('error', error, ...args)
           throw error
         } finally {
@@ -175,7 +207,7 @@ export default Vue.extend({
       loading: this.displayedLoading,
       execute: this.execute
     }) ||
-      this.$slots.default || ['提交']
+      this.$slots.default || [getBusinessContext(this).t('common.submit')]
 
     return h(
       'el-button',

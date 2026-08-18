@@ -65,6 +65,8 @@ export const request = createRequest({
 
 库不会直接读取 token、调用 router 或展示 Element Message，这些项目差异都通过 adapter 注入。
 
+通用项目建议直接使用 `@amusite/ruoyi-adapter`，集中管理响应、分页、字典、上传、导入和导出转换，详见 [RuoYi Adapter](/guide/ruoyi-adapter)。
+
 ## QueryForm / ProTable 迁移
 
 Vue2 和 Vue3 业务包均内置从 RuoYi 场景适配的 `QueryForm`、`ProTable` 和 `Pagination`。默认会注册兼容名，也会注册组件库别名：
@@ -101,7 +103,7 @@ app.use(Vue3ElementPlusBusiness, {
 })
 ```
 
-Vue2 项目将 `app.use` 换成 `Vue.use(Vue2ElementBusiness, options)`。之后可以用 `v-permission="'system:user:add'"` 或 `<x-permission permission="system:user:add">` 控制业务操作。组件和指令使用同一个判定入口，不直接导入宿主 store。
+Vue2 项目将 `app.use` 换成 `Vue.use(Vue2ElementBusiness, options)`。之后可以用 `v-permission="'system:user:add'"` 或 `<x-permission permission="system:user:add">` 控制业务操作。组件和指令使用同一个判定入口，不直接导入宿主 store。该能力只控制前端展示，服务端仍必须对接口执行真实鉴权。
 
 ## 导入导出
 

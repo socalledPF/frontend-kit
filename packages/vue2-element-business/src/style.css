@@ -1,3 +1,20 @@
+:root {
+  --x-business-border: var(--amusite-border, #dcdfe6);
+  --x-business-border-light: var(--amusite-border-light, #ebeef5);
+  --x-business-muted: var(--amusite-text-secondary, #606266);
+  --x-business-subtle: var(--amusite-text-muted, #64748b);
+  --x-business-text: var(--amusite-text-primary, #303133);
+  --x-business-danger: var(--amusite-color-danger, #dc2626);
+  --x-business-primary: var(--amusite-color-primary, #2563eb);
+  --x-business-surface: var(--amusite-surface, #ffffff);
+  --x-business-surface-muted: var(--amusite-surface-muted, #f5f7fa);
+  --x-business-surface-overlay: var(--amusite-surface-overlay, rgba(255, 255, 255, 0.86));
+  --x-business-overlay: var(--amusite-overlay, rgba(0, 0, 0, 0.58));
+  --x-business-overlay-text: var(--amusite-overlay-text, #ffffff);
+  --x-business-danger-surface: var(--amusite-danger-surface, rgba(245, 108, 108, 0.05));
+  --x-business-danger-overlay: var(--amusite-danger-overlay, rgba(245, 108, 108, 0.92));
+}
+
 .x-query-form .query-form__control--radio-group {
   display: flex;
   align-items: center;
@@ -46,7 +63,7 @@
 }
 
 .x-pagination.pagination-container {
-  background: #fff;
+  background: var(--x-business-surface);
 }
 
 .x-pagination.pagination-container.hidden {
@@ -572,7 +589,7 @@
 }
 
 .x-upload__file.is-error {
-  background: rgba(245, 108, 108, 0.05);
+  background: var(--x-business-danger-surface);
 }
 
 .x-upload__file-icon {
@@ -668,7 +685,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--x-business-surface-overlay);
 }
 
 .x-upload__image-actions {
@@ -676,8 +693,8 @@
   inset: 0;
   justify-content: center;
   gap: 3px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.58);
+  color: var(--x-business-overlay-text);
+  background: var(--x-business-overlay);
   opacity: 0;
   transition: opacity 0.18s ease;
 }
@@ -689,7 +706,7 @@
 }
 
 .x-upload__image-actions .x-upload__action.el-button {
-  color: #fff;
+  color: var(--x-business-overlay-text);
 }
 
 .x-upload__image-error {
@@ -702,8 +719,8 @@
   align-items: center;
   min-width: 0;
   padding: 4px 6px;
-  color: #fff;
-  background: rgba(245, 108, 108, 0.92);
+  color: var(--x-business-overlay-text);
+  background: var(--x-business-danger-overlay);
   font-size: 11px;
   line-height: 16px;
 }

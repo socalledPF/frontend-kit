@@ -6,6 +6,7 @@ import type {
   FormDialogMode,
   FormDialogSubmit
 } from '../types'
+import { getBusinessContext } from '../context'
 
 type FormModel = Record<string, unknown>
 type CloseReason = FormDialogCloseContext['reason']
@@ -57,11 +58,11 @@ export default Vue.extend({
     },
     confirmText: {
       type: String,
-      default: '保存'
+      default: ''
     },
     cancelText: {
       type: String,
-      default: '取消'
+      default: ''
     },
     closeOnSuccess: {
       type: Boolean,
@@ -116,7 +117,8 @@ export default Vue.extend({
       dirty: false,
       initialized: false,
       currentTask: undefined as Promise<unknown> | undefined,
-      syncingModel: false
+      syncingModel: false,
+      restoreFocusTo: undefined as HTMLElement | undefined
     }
   },
   watch: {
@@ -124,6 +126,9 @@ export default Vue.extend({
       immediate: true,
       handler(this: any, visible: boolean) {
         if (visible) {
+          if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+            this.restoreFocusTo = document.activeElement
+          }
           this.initializeModel()
         }
       }
@@ -236,17 +241,33 @@ export default Vue.extend({
         return (await this.confirmClose(context)) !== false
       }
 
+      const business = getBusinessContext(this)
+      const message =
+        typeof this.confirmClose === 'string'
+          ? this.confirmClose
+          : business.t('form.unsavedConfirm')
+
+      if (business.confirm) {
+        return (
+          (await business.confirm({
+            message,
+            title: business.t('common.confirmTitle'),
+            type: 'warning'
+          })) !== false
+        )
+      }
+
       const confirm = this.$confirm
       if (typeof confirm !== 'function') {
-        this.$emit('guard-error', new Error('confirmClose 需要先注册 Element-UI MessageBox'))
+        this.$emit(
+          'guard-error',
+          new Error('FormDialog confirmClose requires an Element-UI MessageBox adapter')
+        )
         return false
       }
 
-      const message =
-        typeof this.confirmClose === 'string' ? this.confirmClose : '内容尚未保存，确认关闭吗？'
-
       try {
-        await confirm(message, '提示', { type: 'warning' })
+        await confirm(message, business.t('common.confirmTitle'), { type: 'warning' })
         return true
       } catch {
         return false
@@ -279,7 +300,19 @@ export default Vue.extend({
       if (this.resetOnClose) {
         this.restoreSnapshot(false)
       }
+      this.restoreFocusTo?.focus()
+      this.restoreFocusTo = undefined
       this.$emit('closed')
+    },
+    handleOpened(this: any) {
+      this.$nextTick(() => {
+        const form = this.$refs.form?.$el as HTMLElement | undefined
+        const control = form?.querySelector<HTMLElement>(
+          'input:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+        control?.focus()
+      })
+      this.$emit('opened')
     },
     submitForm(this: any): Promise<unknown> {
       if (this.currentTask) {
@@ -321,6 +354,7 @@ export default Vue.extend({
 
           return result
         } catch (error) {
+          getBusinessContext(this).notifyError?.(error, { source: 'FormDialog', action: 'submit' })
           this.$emit('error', error, model)
           throw error
         } finally {
@@ -362,7 +396,7 @@ export default Vue.extend({
       if (this.mode === 'view') {
         return [
           h('el-button', { props: { size: this.size }, on: { click: this.handleCancelClick } }, [
-            '关闭'
+            getBusinessContext(this).t('common.close')
           ])
         ]
       }
@@ -374,7 +408,7 @@ export default Vue.extend({
             props: { size: this.size, disabled: this.submitting },
             on: { click: this.handleCancelClick }
           },
-          [this.cancelText]
+          [this.cancelText || getBusinessContext(this).t('common.cancel')]
         ),
         h(
           'el-button',
@@ -387,7 +421,7 @@ export default Vue.extend({
             },
             on: { click: this.handleSubmitClick }
           },
-          [this.confirmText]
+          [this.confirmText || getBusinessContext(this).t('common.save')]
         )
       ]
     }
@@ -422,7 +456,7 @@ export default Vue.extend({
         on: {
           'update:visible': this.handleVisibleUpdate,
           open: () => this.$emit('open'),
-          opened: () => this.$emit('opened'),
+          opened: this.handleOpened,
           close: () => this.$emit('close'),
           closed: this.handleClosed
         }

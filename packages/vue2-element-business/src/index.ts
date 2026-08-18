@@ -13,9 +13,11 @@ import Permission, { configurePermission, PermissionDirective } from './componen
 import Descriptions from './components/Descriptions'
 import ImportDialog from './components/ImportDialog'
 import ExportButton from './components/ExportButton'
-import type { PermissionProvider } from './types'
+import type { BusinessHostAdapters } from './types'
+import { installBusinessContext } from './context'
 
 export * from './types'
+export * from './context'
 export { checkPermission, configurePermission, PermissionDirective } from './components/Permission'
 export {
   QueryForm,
@@ -48,55 +50,66 @@ export const XDescriptions: typeof Descriptions = Descriptions
 export const XImportDialog: typeof ImportDialog = ImportDialog
 export const XExportButton: typeof ExportButton = ExportButton
 
-export interface Vue2ElementBusinessPluginOptions {
+export interface Vue2ElementBusinessPluginOptions extends BusinessHostAdapters {
   prefix?: string
   registerCompatibleNames?: boolean
-  permission?: PermissionProvider
   registerPermissionDirective?: boolean
 }
 
-export const Vue2ElementBusiness: PluginObject<Vue2ElementBusinessPluginOptions> = {
-  install(Vue: VueConstructor, options: Vue2ElementBusinessPluginOptions = {}) {
-    const prefix = options.prefix ?? 'X'
-    const registerCompatibleNames = options.registerCompatibleNames ?? true
-    configurePermission(options.permission)
+export function createVue2BusinessPlugin(
+  defaultOptions: Vue2ElementBusinessPluginOptions = {}
+): PluginObject<Vue2ElementBusinessPluginOptions> {
+  return {
+    install(Vue: VueConstructor, installOptions: Vue2ElementBusinessPluginOptions = {}) {
+      const options = {
+        ...defaultOptions,
+        ...installOptions,
+        locale: installOptions.locale ?? defaultOptions.locale
+      }
+      const prefix = options.prefix ?? 'X'
+      const registerCompatibleNames = options.registerCompatibleNames ?? true
+      const context = installBusinessContext(Vue, options)
+      configurePermission(context.permission)
 
-    Vue.component(`${prefix}SearchForm`, QueryForm)
-    Vue.component(`${prefix}DataTable`, ProTable)
-    Vue.component(`${prefix}Pagination`, Pagination)
-    Vue.component(`${prefix}Loading`, Loading)
-    Vue.component(`${prefix}Upload`, Upload)
-    Vue.component(`${prefix}AsyncButton`, AsyncButton)
-    Vue.component(`${prefix}DictTag`, DictTag)
-    Vue.component(`${prefix}DictSelect`, DictSelect)
-    Vue.component(`${prefix}TableToolbar`, TableToolbar)
-    Vue.component(`${prefix}FormDialog`, FormDialog)
-    Vue.component(`${prefix}Permission`, Permission)
-    Vue.component(`${prefix}Descriptions`, Descriptions)
-    Vue.component(`${prefix}ImportDialog`, ImportDialog)
-    Vue.component(`${prefix}ExportButton`, ExportButton)
+      Vue.component(`${prefix}SearchForm`, QueryForm)
+      Vue.component(`${prefix}DataTable`, ProTable)
+      Vue.component(`${prefix}Pagination`, Pagination)
+      Vue.component(`${prefix}Loading`, Loading)
+      Vue.component(`${prefix}Upload`, Upload)
+      Vue.component(`${prefix}AsyncButton`, AsyncButton)
+      Vue.component(`${prefix}DictTag`, DictTag)
+      Vue.component(`${prefix}DictSelect`, DictSelect)
+      Vue.component(`${prefix}TableToolbar`, TableToolbar)
+      Vue.component(`${prefix}FormDialog`, FormDialog)
+      Vue.component(`${prefix}Permission`, Permission)
+      Vue.component(`${prefix}Descriptions`, Descriptions)
+      Vue.component(`${prefix}ImportDialog`, ImportDialog)
+      Vue.component(`${prefix}ExportButton`, ExportButton)
 
-    if ((options.registerPermissionDirective ?? true) && typeof Vue.directive === 'function') {
-      Vue.directive('permission', PermissionDirective)
-    }
+      if ((options.registerPermissionDirective ?? true) && typeof Vue.directive === 'function') {
+        Vue.directive('permission', PermissionDirective)
+      }
 
-    if (registerCompatibleNames) {
-      Vue.component('QueryForm', QueryForm)
-      Vue.component('ProTable', ProTable)
-      Vue.component('Pagination', Pagination)
-      Vue.component('Loading', Loading)
-      Vue.component('Upload', Upload)
-      Vue.component('AsyncButton', AsyncButton)
-      Vue.component('DictTag', DictTag)
-      Vue.component('DictSelect', DictSelect)
-      Vue.component('TableToolbar', TableToolbar)
-      Vue.component('FormDialog', FormDialog)
-      Vue.component('Permission', Permission)
-      Vue.component('Descriptions', Descriptions)
-      Vue.component('ImportDialog', ImportDialog)
-      Vue.component('ExportButton', ExportButton)
+      if (registerCompatibleNames) {
+        Vue.component('QueryForm', QueryForm)
+        Vue.component('ProTable', ProTable)
+        Vue.component('Pagination', Pagination)
+        Vue.component('Loading', Loading)
+        Vue.component('Upload', Upload)
+        Vue.component('AsyncButton', AsyncButton)
+        Vue.component('DictTag', DictTag)
+        Vue.component('DictSelect', DictSelect)
+        Vue.component('TableToolbar', TableToolbar)
+        Vue.component('FormDialog', FormDialog)
+        Vue.component('Permission', Permission)
+        Vue.component('Descriptions', Descriptions)
+        Vue.component('ImportDialog', ImportDialog)
+        Vue.component('ExportButton', ExportButton)
+      }
     }
   }
 }
+
+export const Vue2ElementBusiness = createVue2BusinessPlugin()
 
 export default Vue2ElementBusiness

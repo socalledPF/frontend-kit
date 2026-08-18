@@ -1,0 +1,7 @@
+* @socalledPF
+
+/packages/business-core/ @socalledPF
+/packages/request/ @socalledPF
+/packages/vue3-element-plus-business/ @socalledPF
+/packages/vue2-element-business/ @socalledPF
+/.github/workflows/ @socalledPF

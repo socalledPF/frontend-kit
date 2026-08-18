@@ -1,18 +1,18 @@
 import Vue, { type CreateElement, type VNode } from 'vue'
 import type { ProTableColumn, TableDensity, TableToolbarPreferences } from '../types'
+import { getBusinessContext } from '../context'
 
-const DENSITY_OPTIONS: Array<{ label: string; value: TableDensity }> = [
-  { label: '宽松', value: 'medium' },
-  { label: '默认', value: 'small' },
-  { label: '紧凑', value: 'mini' }
+const DENSITY_OPTIONS: Array<{
+  message: 'table.densityMedium' | 'table.densitySmall' | 'table.densityMini'
+  value: TableDensity
+}> = [
+  { message: 'table.densityMedium', value: 'medium' },
+  { message: 'table.densitySmall', value: 'small' },
+  { message: 'table.densityMini', value: 'mini' }
 ]
 
 function getColumnKey(column: ProTableColumn, index: number): string {
   return String(column.key ?? column.prop ?? column.label ?? `column-${index}`)
-}
-
-function canUseStorage(): boolean {
-  return typeof window !== 'undefined' && Boolean(window.localStorage)
 }
 
 export default Vue.extend({
@@ -113,11 +113,15 @@ export default Vue.extend({
   },
   mounted(this: any) {
     this.restorePreferences()
+    this.patchAccessibility()
 
     if (typeof document !== 'undefined') {
       document.addEventListener('fullscreenchange', this.handleFullscreenChange)
       this.handleFullscreenChange()
     }
+  },
+  updated(this: any) {
+    this.patchAccessibility()
   },
   beforeDestroy(this: any) {
     if (typeof document !== 'undefined') {
@@ -125,18 +129,28 @@ export default Vue.extend({
     }
   },
   methods: {
+    patchAccessibility(this: any) {
+      this.$nextTick(() => {
+        const triggers =
+          (this.$el as HTMLElement | undefined)?.querySelectorAll('[aria-haspopup="list"]') || []
+        triggers.forEach((trigger) => trigger.setAttribute('aria-haspopup', 'menu'))
+      })
+    },
     getPreferenceStorageKey(this: any): string {
       return this.storageKey ? `amusite:table-toolbar:${this.storageKey}` : ''
     },
     readPreferences(this: any): TableToolbarPreferences | undefined {
       const key = this.getPreferenceStorageKey()
 
-      if (!key || !canUseStorage()) {
+      const storage =
+        getBusinessContext(this).storage ??
+        (typeof window !== 'undefined' ? window.localStorage : undefined)
+      if (!key || !storage) {
         return undefined
       }
 
       try {
-        const value = window.localStorage.getItem(key)
+        const value = storage.getItem(key)
         return value ? (JSON.parse(value) as TableToolbarPreferences) : undefined
       } catch {
         return undefined
@@ -150,7 +164,10 @@ export default Vue.extend({
     ) {
       const key = this.getPreferenceStorageKey()
 
-      if (!key || !canUseStorage()) {
+      const storage =
+        getBusinessContext(this).storage ??
+        (typeof window !== 'undefined' ? window.localStorage : undefined)
+      if (!key || !storage) {
         return
       }
 
@@ -163,7 +180,7 @@ export default Vue.extend({
         }, {})
 
       try {
-        window.localStorage.setItem(
+        storage.setItem(
           key,
           JSON.stringify({ density, columns: columnPreferences } as TableToolbarPreferences)
         )
@@ -288,11 +305,15 @@ export default Vue.extend({
         const target = this.resolveFullscreenTarget()
 
         if (!target || typeof target.requestFullscreen !== 'function') {
-          throw new Error('当前浏览器或目标容器不支持全屏')
+          throw new Error(getBusinessContext(this).t('table.fullscreenUnsupported'))
         }
 
         await target.requestFullscreen()
       } catch (error) {
+        getBusinessContext(this).notifyError?.(error, {
+          source: 'TableToolbar',
+          action: 'fullscreen'
+        })
         this.$emit('fullscreen-error', error)
       }
     },
@@ -355,7 +376,10 @@ export default Vue.extend({
         'el-button',
         {
           class: 'x-table-toolbar__button',
-          attrs: { title: '表格密度', 'aria-label': '表格密度' },
+          attrs: {
+            title: getBusinessContext(this).t('table.density'),
+            'aria-label': getBusinessContext(this).t('table.density')
+          },
           props: { size: 'mini', circle: true }
         },
         [h('i', { class: 'el-icon-s-operation', attrs: { 'aria-hidden': 'true' } })]
@@ -371,7 +395,7 @@ export default Vue.extend({
               class: { 'is-active': item.value === this.density },
               attrs: { command: item.value }
             },
-            [item.label]
+            [getBusinessContext(this).t(item.message)]
           )
         )
       )
@@ -397,7 +421,7 @@ export default Vue.extend({
             },
             on: { input: this.updateAllColumns }
           },
-          ['列显示']
+          [getBusinessContext(this).t('table.columnDisplay')]
         ),
         h(
           'el-button',
@@ -405,7 +429,7 @@ export default Vue.extend({
             props: { type: 'text', size: 'mini' },
             on: { click: this.resetColumns }
           },
-          ['重置']
+          [getBusinessContext(this).t('query.reset')]
         )
       ])
       const list = h(
@@ -431,7 +455,10 @@ export default Vue.extend({
         {
           slot: 'reference',
           class: 'x-table-toolbar__button',
-          attrs: { title: '列设置', 'aria-label': '列设置' },
+          attrs: {
+            title: getBusinessContext(this).t('table.columnSettings'),
+            'aria-label': getBusinessContext(this).t('table.columnSettings')
+          },
           props: { size: 'mini', circle: true }
         },
         [h('i', { class: 'el-icon-menu', attrs: { 'aria-hidden': 'true' } })]
@@ -455,7 +482,9 @@ export default Vue.extend({
         this.renderIconButton(
           h,
           'el-icon-search',
-          this.showSearch ? '收起搜索' : '展开搜索',
+          this.showSearch
+            ? getBusinessContext(this).t('query.collapse')
+            : getBusinessContext(this).t('query.expand'),
           this.toggleSearch,
           { active: this.showSearch }
         )
@@ -464,10 +493,16 @@ export default Vue.extend({
 
     if (this.showRefresh) {
       controls.push(
-        this.renderIconButton(h, 'el-icon-refresh', '刷新', this.refresh, {
-          disabled: this.refreshing,
-          loading: this.refreshing
-        })
+        this.renderIconButton(
+          h,
+          'el-icon-refresh',
+          getBusinessContext(this).t('table.refresh'),
+          this.refresh,
+          {
+            disabled: this.refreshing,
+            loading: this.refreshing
+          }
+        )
       )
     }
 
@@ -484,7 +519,9 @@ export default Vue.extend({
         this.renderIconButton(
           h,
           this.fullscreen ? 'el-icon-copy-document' : 'el-icon-full-screen',
-          this.fullscreen ? '退出全屏' : '全屏',
+          this.fullscreen
+            ? getBusinessContext(this).t('table.exitFullscreen')
+            : getBusinessContext(this).t('table.fullscreen'),
           this.toggleFullscreen,
           { active: this.fullscreen }
         )

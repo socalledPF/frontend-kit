@@ -8,6 +8,12 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '**/.vitepress/dist/**',
+      '**/.vitepress/.temp/**',
+      '**/.turbo/**',
+      '**/.api-extractor/**',
+      '**/etc/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       '**/coverage/**'
     ]
   },
@@ -35,6 +41,16 @@ export default [
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-empty-object-type': 'off'
+    }
+  },
+  {
+    files: ['scripts/**/*.mjs', '*.config.cjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        module: 'readonly',
+        process: 'readonly'
+      }
     }
   }
 ]

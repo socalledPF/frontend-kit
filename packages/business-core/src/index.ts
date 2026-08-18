@@ -1,2 +1,5 @@
 export * from './types'
 export * from './helpers'
+export * from './locale'
+export * from './host'
+export * from './schema'

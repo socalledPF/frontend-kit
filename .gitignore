@@ -1,7 +1,12 @@
 node_modules
+.pnpm-store
 dist
 .turbo
 coverage
+.api-extractor
+playwright-report
+test-results
+*.tgz
 .DS_Store
 *.log
 apps/docs/.vitepress/dist

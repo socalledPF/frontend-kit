@@ -33,10 +33,7 @@ export function isEmpty(value: unknown): boolean {
 
 export function safeJsonParse<T = unknown>(value: string): T | undefined
 export function safeJsonParse<T>(value: string | null | undefined, fallback: T): T
-export function safeJsonParse<T>(
-  value: string | null | undefined,
-  fallback?: T
-): T | undefined {
+export function safeJsonParse<T>(value: string | null | undefined, fallback?: T): T | undefined {
   if (typeof value !== 'string') {
     return fallback
   }

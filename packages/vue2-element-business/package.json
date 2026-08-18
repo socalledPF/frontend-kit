@@ -1,23 +1,189 @@
 {
   "name": "@amusite/vue2-element-business",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Vue2 + Element-UI business components for RuoYi-style admin pages.",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/socalledPF/frontend-kit.git",
+    "directory": "packages/vue2-element-business"
+  },
+  "keywords": [
+    "amusite",
+    "vue2",
+    "element-ui",
+    "ruoyi"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./query-form": {
+      "import": {
+        "types": "./dist/entries/query-form.d.ts",
+        "default": "./dist/entries/query-form.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/query-form.d.cts",
+        "default": "./dist/entries/query-form.cjs"
+      }
+    },
+    "./pro-table": {
+      "import": {
+        "types": "./dist/entries/pro-table.d.ts",
+        "default": "./dist/entries/pro-table.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/pro-table.d.cts",
+        "default": "./dist/entries/pro-table.cjs"
+      }
+    },
+    "./pagination": {
+      "import": {
+        "types": "./dist/entries/pagination.d.ts",
+        "default": "./dist/entries/pagination.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/pagination.d.cts",
+        "default": "./dist/entries/pagination.cjs"
+      }
+    },
+    "./loading": {
+      "import": {
+        "types": "./dist/entries/loading.d.ts",
+        "default": "./dist/entries/loading.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/loading.d.cts",
+        "default": "./dist/entries/loading.cjs"
+      }
+    },
+    "./upload": {
+      "import": {
+        "types": "./dist/entries/upload.d.ts",
+        "default": "./dist/entries/upload.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/upload.d.cts",
+        "default": "./dist/entries/upload.cjs"
+      }
+    },
+    "./async-button": {
+      "import": {
+        "types": "./dist/entries/async-button.d.ts",
+        "default": "./dist/entries/async-button.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/async-button.d.cts",
+        "default": "./dist/entries/async-button.cjs"
+      }
+    },
+    "./dict-tag": {
+      "import": {
+        "types": "./dist/entries/dict-tag.d.ts",
+        "default": "./dist/entries/dict-tag.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/dict-tag.d.cts",
+        "default": "./dist/entries/dict-tag.cjs"
+      }
+    },
+    "./dict-select": {
+      "import": {
+        "types": "./dist/entries/dict-select.d.ts",
+        "default": "./dist/entries/dict-select.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/dict-select.d.cts",
+        "default": "./dist/entries/dict-select.cjs"
+      }
+    },
+    "./table-toolbar": {
+      "import": {
+        "types": "./dist/entries/table-toolbar.d.ts",
+        "default": "./dist/entries/table-toolbar.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/table-toolbar.d.cts",
+        "default": "./dist/entries/table-toolbar.cjs"
+      }
+    },
+    "./form-dialog": {
+      "import": {
+        "types": "./dist/entries/form-dialog.d.ts",
+        "default": "./dist/entries/form-dialog.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/form-dialog.d.cts",
+        "default": "./dist/entries/form-dialog.cjs"
+      }
+    },
+    "./permission": {
+      "import": {
+        "types": "./dist/entries/permission.d.ts",
+        "default": "./dist/entries/permission.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/permission.d.cts",
+        "default": "./dist/entries/permission.cjs"
+      }
+    },
+    "./descriptions": {
+      "import": {
+        "types": "./dist/entries/descriptions.d.ts",
+        "default": "./dist/entries/descriptions.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/descriptions.d.cts",
+        "default": "./dist/entries/descriptions.cjs"
+      }
+    },
+    "./import-dialog": {
+      "import": {
+        "types": "./dist/entries/import-dialog.d.ts",
+        "default": "./dist/entries/import-dialog.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/import-dialog.d.cts",
+        "default": "./dist/entries/import-dialog.cjs"
+      }
+    },
+    "./export-button": {
+      "import": {
+        "types": "./dist/entries/export-button.d.ts",
+        "default": "./dist/entries/export-button.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/export-button.d.cts",
+        "default": "./dist/entries/export-button.cjs"
+      }
     },
     "./style.css": "./dist/style.css"
   },
   "scripts": {
     "build": "tsup && cp src/style.css dist/style.css",
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint \"src/**/*.ts\""
   },
@@ -36,5 +202,7 @@
     "vue": "2.6.14",
     "vue-template-compiler": "2.6.14"
   },
-  "sideEffects": ["*.css"]
+  "sideEffects": [
+    "*.css"
+  ]
 }

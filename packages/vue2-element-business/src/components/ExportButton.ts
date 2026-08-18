@@ -2,14 +2,15 @@ import Vue, { type CreateElement, type VNode } from 'vue'
 import { downloadBlob } from '@amusite/utils'
 import type { ExportFile, ExportResult } from '../types'
 import AsyncButton from './AsyncButton'
+import { getBusinessContext } from '../context'
 
 function isExportFile(result: ExportResult): result is ExportFile {
   return Boolean(
     result &&
-      typeof result === 'object' &&
-      !(typeof Blob !== 'undefined' && result instanceof Blob) &&
-      !(result instanceof ArrayBuffer) &&
-      Object.prototype.hasOwnProperty.call(result, 'data')
+    typeof result === 'object' &&
+    !(typeof Blob !== 'undefined' && result instanceof Blob) &&
+    !(result instanceof ArrayBuffer) &&
+    Object.prototype.hasOwnProperty.call(result, 'data')
   )
 }
 
@@ -95,6 +96,8 @@ export default Vue.extend({
       if (this.autoDownload) {
         if (this.download) {
           await this.download(file, ...args)
+        } else if (getBusinessContext(this).download) {
+          await getBusinessContext(this).download!(file)
         } else {
           downloadBlob(file.data, file.fileName || 'export.xlsx', { type: file.type })
         }
@@ -108,7 +111,9 @@ export default Vue.extend({
     }
   },
   render(this: any, h: CreateElement): VNode {
-    const content = this.$scopedSlots.default ? undefined : this.$slots.default || ['导出']
+    const content = this.$scopedSlots.default
+      ? undefined
+      : this.$slots.default || [getBusinessContext(this).t('export.action')]
 
     return h(
       AsyncButton,
