@@ -248,7 +248,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
-    "@vue/test-utils": "^2.4.6",
+    "@vue/test-utils": "^2.4.11",
     "@vue/server-renderer": "^3.5.0",
     "element-plus": "^2.14.4",
     "jsdom": "^24.1.3",
