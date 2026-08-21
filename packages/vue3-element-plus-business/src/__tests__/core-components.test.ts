@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import type { ExportFile } from '@amusite/business-core'
 import { createSSRApp, h, nextTick } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -135,7 +136,7 @@ describe('Vue3 core business components', () => {
         props: {
           request: vi.fn().mockResolvedValue('csv-content'),
           transformResult: (result: unknown) => ({ data: String(result), type: 'text/csv' }),
-          fileName: (_file, ...args: unknown[]) => `${String(args[0])}.csv`,
+          fileName: (_file: ExportFile, ...args: unknown[]) => `${String(args[0])}.csv`,
           download
         }
       })
