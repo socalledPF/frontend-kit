@@ -37,18 +37,18 @@
     "@axe-core/playwright": "^4.10.2",
     "@changesets/cli": "^2.29.5",
     "@eslint/js": "^9.30.0",
-    "@microsoft/api-extractor": "^7.52.11",
+    "@microsoft/api-extractor": "^7.59.0",
     "@playwright/test": "^1.55.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.30.0",
     "eslint-plugin-vue": "^10.3.0",
-    "publint": "^0.3.12",
+    "publint": "^0.3.24",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
-    "turbo": "^2.5.4",
+    "turbo": "^2.10.12",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.35.0",
+    "typescript-eslint": "^8.69.0",
     "vitest": "^4.1.10"
   }
 }
