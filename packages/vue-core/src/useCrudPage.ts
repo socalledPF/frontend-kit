@@ -83,6 +83,10 @@ export function useCrudPage<
     source
       ? createSchemaModel(options.schema, source as Record<string, unknown>)
       : { ...createSchemaModel(options.schema), ...(options.createModel?.() ?? {}) }
+  const refreshAfterMutation = async (enabled: boolean) => {
+    if (!enabled) return
+    await table.refresh().catch(() => undefined)
+  }
 
   const saveAction = useAsyncAction<
     SaveResult,
@@ -91,8 +95,8 @@ export function useCrudPage<
     action: async (model, mode, source) => {
       if (!options.save) return undefined as SaveResult
       const result = await options.save(cloneValue(model), mode, source)
-      if (options.refreshAfterSave ?? true) await table.refresh()
       modal.close(true)
+      await refreshAfterMutation(options.refreshAfterSave ?? true)
       return result
     },
     onError: (error) => options.onError?.(error, 'save')
@@ -103,7 +107,7 @@ export function useCrudPage<
       if (!options.remove) return undefined as RemoveResult
       const result = await options.remove([...rows])
       selection.clear()
-      if (options.refreshAfterRemove ?? true) await table.refresh()
+      await refreshAfterMutation(options.refreshAfterRemove ?? true)
       return result
     },
     onError: (error) => options.onError?.(error, 'remove')

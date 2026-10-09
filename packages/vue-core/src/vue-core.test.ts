@@ -284,6 +284,40 @@ describe('@amusite/vue-core', () => {
     expect(onError).toHaveBeenCalledWith(expect.any(Error), 'remove')
   })
 
+  it('keeps successful CRUD mutations committed when the following refresh fails', async () => {
+    const actionError = vi.fn()
+    const tableError = vi.fn()
+    const save = vi.fn().mockResolvedValue({ id: 2 })
+    const remove = vi.fn().mockResolvedValue(true)
+    const refreshError = new Error('refresh failed')
+    const crud = useCrudPage<{ id: number }>({
+      schema: [{ prop: 'id', label: 'ID', form: true }],
+      table: {
+        request: vi.fn().mockRejectedValue(refreshError),
+        immediate: false,
+        onError: tableError
+      },
+      rowKey: (row) => row.id,
+      save,
+      remove,
+      onError: actionError
+    })
+
+    crud.openCreate()
+    await expect(crud.submit()).resolves.toEqual({ id: 2 })
+    expect(crud.modal.visible.value).toBe(false)
+    expect(crud.saveAction.status.value).toBe('success')
+    expect(crud.table.error.value).toBe(refreshError)
+
+    const row = { id: 1 }
+    crud.selection.setSelection([row])
+    await expect(crud.removeRows()).resolves.toBe(true)
+    expect(crud.selection.selected.value).toEqual([])
+    expect(crud.removeAction.status.value).toBe('success')
+    expect(tableError).toHaveBeenCalledTimes(2)
+    expect(actionError).not.toHaveBeenCalled()
+  })
+
   it('covers uncached dictionaries, modal setters and reference selection', async () => {
     const loader = vi.fn(async (type: string) => [{ label: type, value: '1' }])
     const cache = new Map([['cached', [{ label: 'Cached', value: '0' }]]])

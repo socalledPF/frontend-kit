@@ -62,7 +62,8 @@ const expanded = ref(false)
 const resetVersion = ref(0)
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
 let modelReference: QueryFormModel | undefined
-let syncing = false
+let pendingModelEcho: QueryFormModel | undefined
+let modelEchoVersion = 0
 const visibleFields = computed(() =>
   props.fields.filter((field) => field && field.visible !== false)
 )
@@ -103,10 +104,11 @@ watch(
   () => props.model,
   (model) => {
     const next = normalizeModel(model)
-    if (!syncing && !isEqualValue(next, innerModel.value)) innerModel.value = next
+    const isModelEcho = pendingModelEcho !== undefined && isEqualValue(next, pendingModelEcho)
+    if (!isModelEcho && !isEqualValue(next, innerModel.value)) innerModel.value = next
     if (model !== modelReference) {
       modelReference = model
-      initialSnapshot.value = cloneValue(next)
+      if (!isModelEcho) initialSnapshot.value = cloneValue(next)
     }
   },
   { immediate: true, deep: true }
@@ -114,10 +116,12 @@ watch(
 watch(
   innerModel,
   (value) => {
-    syncing = true
-    emit('update:model', cloneValue(value))
+    const emittedModel = cloneValue(value)
+    const currentVersion = ++modelEchoVersion
+    pendingModelEcho = emittedModel
+    emit('update:model', emittedModel)
     void nextTick(() => {
-      syncing = false
+      if (currentVersion === modelEchoVersion) pendingModelEcho = undefined
     })
   },
   { deep: true }

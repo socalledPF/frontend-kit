@@ -204,6 +204,64 @@ describe('@amusite/request', () => {
     expect(transport).toHaveBeenCalledTimes(4)
   })
 
+  it('does not retry token refresh again when the retried request is still unauthorized', async () => {
+    const refreshToken = vi.fn().mockResolvedValue('fresh')
+    const onUnauthorized = vi.fn()
+    const onError = vi.fn()
+    const transport = vi.fn(async (config: InternalAxiosRequestConfig) => ({
+      data: { code: 401, msg: 'still expired' },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config,
+      request: {}
+    }))
+    const client = createRequest({
+      adapter: { getToken: () => 'old', refreshToken, onUnauthorized, onError },
+      axiosAdapter: transport as AxiosAdapter
+    })
+
+    await expect(client.get('/profile')).rejects.toMatchObject({
+      kind: 'unauthorized',
+      message: 'still expired'
+    })
+    expect(refreshToken).toHaveBeenCalledTimes(1)
+    expect(transport).toHaveBeenCalledTimes(2)
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
+  it('limits token refresh retries for HTTP unauthorized responses', async () => {
+    const refreshToken = vi.fn().mockResolvedValue('fresh')
+    const onUnauthorized = vi.fn()
+    const onError = vi.fn()
+    const transport = vi.fn(async (config: InternalAxiosRequestConfig) => {
+      const response = {
+        data: { message: 'unauthorized' },
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: {},
+        config,
+        request: {}
+      }
+      throw new AxiosError('unauthorized', 'ERR_BAD_REQUEST', config, {}, response)
+    })
+    const client = createRequest({
+      adapter: { getToken: () => 'old', refreshToken, onUnauthorized, onError },
+      axiosAdapter: transport as AxiosAdapter
+    })
+
+    await expect(client.get('/profile')).rejects.toMatchObject({
+      kind: 'http',
+      isUnauthorized: true,
+      status: 401
+    })
+    expect(refreshToken).toHaveBeenCalledTimes(1)
+    expect(transport).toHaveBeenCalledTimes(2)
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
+    expect(onError).toHaveBeenCalledTimes(1)
+  })
+
   it('parses business errors embedded in Blob downloads', async () => {
     const payload = new Blob([JSON.stringify({ code: 500, msg: '导出失败' })], {
       type: 'application/json'

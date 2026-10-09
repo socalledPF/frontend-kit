@@ -57,6 +57,30 @@ describe('Vue3 core business components', () => {
     expect(wrapper.vm.expanded).toBe(true)
   })
 
+  it('keeps the original reset snapshot when a parent echoes a cloned v-model', async () => {
+    let echoModel: (model: Record<string, unknown>) => void = () => undefined
+    const wrapper = track(
+      mount(QueryForm, {
+        props: {
+          model: { keyword: 'initial' },
+          fields: [{ prop: 'keyword', label: 'Keyword' }],
+          'onUpdate:model': (model: Record<string, unknown>) => echoModel(model)
+        }
+      })
+    )
+    echoModel = (model) => {
+      void wrapper.setProps({ model: { ...model } })
+    }
+
+    wrapper.vm.innerModel.keyword = 'edited'
+    await vi.waitFor(() => expect(wrapper.props('model')).toEqual({ keyword: 'edited' }))
+    wrapper.vm.reset()
+    await nextTick()
+
+    expect(wrapper.vm.innerModel.keyword).toBe('initial')
+    expect(wrapper.emitted('reset')?.at(-1)).toEqual([{ keyword: 'initial' }])
+  })
+
   it('forwards table columns, pagination models and slot scopes', async () => {
     const wrapper = track(
       mount(ProTable, {

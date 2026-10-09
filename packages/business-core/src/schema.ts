@@ -1,4 +1,5 @@
 import type { DescriptionItem, ProTableColumn, QueryFormField } from './types'
+import { cloneValue } from './helpers'
 
 export interface BusinessFormField {
   prop: string
@@ -60,6 +61,13 @@ export function createSchemaModel(
   source: Record<string, unknown> = {}
 ) {
   return Object.fromEntries(
-    schema.map((field) => [field.prop, source[field.prop] ?? field.defaultValue])
+    schema.map((field) => [
+      field.prop,
+      cloneValue(
+        Object.prototype.hasOwnProperty.call(source, field.prop)
+          ? source[field.prop]
+          : field.defaultValue
+      )
+    ])
   )
 }

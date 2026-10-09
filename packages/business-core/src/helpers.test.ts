@@ -162,4 +162,24 @@ describe('business-core helpers', () => {
       hidden: undefined
     })
   })
+
+  it('creates isolated schema models and preserves explicit null values', () => {
+    const defaults = { preferences: { compact: true }, tags: ['default'] }
+    const source = { profile: { name: 'Ada' }, status: null }
+    const schema: BusinessFieldSchema[] = [
+      { prop: 'profile', label: 'Profile' },
+      { prop: 'status', label: 'Status', defaultValue: 'active' },
+      { prop: 'preferences', label: 'Preferences', defaultValue: defaults.preferences },
+      { prop: 'tags', label: 'Tags', defaultValue: defaults.tags }
+    ]
+
+    const model = createSchemaModel(schema, source)
+    ;(model.profile as { name: string }).name = 'Grace'
+    ;(model.preferences as { compact: boolean }).compact = false
+    ;(model.tags as string[]).push('custom')
+
+    expect(model.status).toBeNull()
+    expect(source.profile.name).toBe('Ada')
+    expect(defaults).toEqual({ preferences: { compact: true }, tags: ['default'] })
+  })
 })

@@ -13,6 +13,12 @@ export interface CreateRequestOptions extends Omit<AxiosRequestConfig, 'adapter'
   axiosAdapter?: AxiosAdapter
 }
 
+const TOKEN_REFRESH_RETRIED = '__amusiteTokenRefreshRetried'
+
+type RefreshableRequestConfig = AxiosRequestConfig & {
+  [TOKEN_REFRESH_RETRIED]?: boolean
+}
+
 export interface DownloadResult<T = Blob> {
   data: T
   fileName: string
@@ -161,7 +167,7 @@ export function createRequest(options: CreateRequestOptions = {}): RequestClient
   const instance = axios.create({ ...axiosOptions, adapter: axiosAdapter })
   const contexts = new WeakMap<object, RequestLifecycleContext>()
   const settled = new WeakSet<object>()
-  const retried = new WeakSet<object>()
+  const notifiedErrors = new WeakSet<object>()
   let refreshTask: Promise<string | null | undefined> | undefined
 
   const getContext = (config: AxiosRequestConfig): RequestLifecycleContext => {
@@ -186,7 +192,9 @@ export function createRequest(options: CreateRequestOptions = {}): RequestClient
   }
 
   const notifyError = (error: RequestError) => {
-    if (error.kind !== 'cancel') adapter.onError?.(error.message, error)
+    if (error.kind === 'cancel' || notifiedErrors.has(error)) return
+    notifiedErrors.add(error)
+    adapter.onError?.(error.message, error)
   }
 
   const toRequestError = (error: unknown, config?: AxiosRequestConfig): RequestError => {
@@ -208,28 +216,28 @@ export function createRequest(options: CreateRequestOptions = {}): RequestClient
     response: AxiosResponse,
     payload: unknown
   ): Promise<{ retried: boolean; value?: unknown }> => {
-    const config = response.config
-    if (!adapter.refreshToken || retried.has(config as object)) return { retried: false }
+    const config = response.config as RefreshableRequestConfig
+    if (!adapter.refreshToken || config[TOKEN_REFRESH_RETRIED]) return { retried: false }
     if (adapter.shouldRefreshToken && !adapter.shouldRefreshToken(payload))
       return { retried: false }
-    retried.add(config as object)
+    config[TOKEN_REFRESH_RETRIED] = true
+    let refreshed: string | null | undefined
+    let token: string | null | undefined
+    let formattedToken: string
     try {
       refreshTask ??= Promise.resolve(adapter.refreshToken(payload)).finally(() => {
         refreshTask = undefined
       })
-      const refreshed = await refreshTask
-      const token = refreshed ?? (await adapter.getToken?.())
+      refreshed = await refreshTask
+      token = refreshed ?? (await adapter.getToken?.())
       if (!token) return { retried: false }
-      const header = adapter.tokenHeader ?? 'Authorization'
-      config.headers = setRequestHeader(
-        config.headers,
-        header,
-        (adapter.formatToken ?? defaultFormatToken)(token)
-      )
-      return { retried: true, value: await instance.request(config) }
+      formattedToken = (adapter.formatToken ?? defaultFormatToken)(token)
     } catch {
       return { retried: false }
     }
+    const header = adapter.tokenHeader ?? 'Authorization'
+    config.headers = setRequestHeader(config.headers, header, formattedToken)
+    return { retried: true, value: await instance.request(config) }
   }
 
   const businessError = async (payload: ApiResponse, response: AxiosResponse) => {
