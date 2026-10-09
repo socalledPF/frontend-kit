@@ -7,7 +7,9 @@ const budgets = [
   ['packages/vue2-element-business/dist/index.mjs', 28 * 1024],
   ['packages/vue2-element-business/dist/style.css', 4 * 1024],
   ['packages/vue3-element-plus-business/dist/index.mjs', 30 * 1024],
-  ['packages/vue3-element-plus-business/dist/style.css', 5 * 1024]
+  ['packages/vue3-element-plus-business/dist/style.css', 5 * 1024],
+  ['packages/vue3-echarts-business/dist/index.mjs', 8 * 1024],
+  ['packages/vue3-echarts-business/dist/style.css', 6 * 1024]
 ]
 
 let failed = false
@@ -47,6 +49,23 @@ for (const entry of vue3Entries) {
   const limit = 14 * 1024
   console.log(
     `${size <= limit ? 'PASS' : 'FAIL'} Vue3/${basename(entry, '.mjs')}: ${(size / 1024).toFixed(1)} KiB / 14.0 KiB gzip`
+  )
+  failed ||= size > limit
+}
+
+const chartDist = resolve(rootDir, 'packages/vue3-echarts-business/dist')
+const chartEntries = (await readdir(chartDist)).filter(
+  (file) => file.endsWith('.mjs') && file !== 'index.mjs'
+)
+for (const entry of chartEntries) {
+  const source = await readFile(resolve(chartDist, entry), 'utf8')
+  const chunks = [...source.matchAll(/from\s+["']\.\/(.+?)["']/g)].map((match) => match[1])
+  const contents = [source]
+  for (const chunk of chunks) contents.push(await readFile(resolve(chartDist, chunk), 'utf8'))
+  const size = gzipSync(contents.join('\n')).byteLength
+  const limit = 12 * 1024
+  console.log(
+    `${size <= limit ? 'PASS' : 'FAIL'} Charts/${basename(entry, '.mjs')}: ${(size / 1024).toFixed(1)} KiB / 12.0 KiB gzip`
   )
   failed ||= size > limit
 }

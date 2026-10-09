@@ -18,6 +18,12 @@
   --amusite-overlay-text: #ffffff;
   --amusite-danger-surface: rgba(220, 38, 38, 0.08);
   --amusite-danger-overlay: rgba(220, 38, 38, 0.92);
+  --amusite-chart-1: #2563eb;
+  --amusite-chart-2: #0f766e;
+  --amusite-chart-3: #d97706;
+  --amusite-chart-4: #7c3aed;
+  --amusite-chart-5: #dc2626;
+  --amusite-chart-grid: #e2e8f0;
   --amusite-radius: 4px;
   --amusite-space-page: 16px;
   --amusite-space-section: 16px;
@@ -59,6 +65,12 @@
   --amusite-overlay: rgba(2, 6, 23, 0.76);
   --amusite-danger-surface: rgba(248, 113, 113, 0.14);
   --amusite-danger-overlay: rgba(185, 28, 28, 0.94);
+  --amusite-chart-1: #60a5fa;
+  --amusite-chart-2: #2dd4bf;
+  --amusite-chart-3: #fbbf24;
+  --amusite-chart-4: #c084fc;
+  --amusite-chart-5: #f87171;
+  --amusite-chart-grid: #334155;
 }
 
 [data-amusite-contrast='high'] {

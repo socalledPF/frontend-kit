@@ -24,8 +24,8 @@ export default defineConfig({
     },
     {
       command:
-        'apps/playground-vue3/node_modules/.bin/vite apps/playground-vue3 --host 127.0.0.1 --port 4173',
-      url: 'http://127.0.0.1:4173',
+        'apps/playground-vue3/node_modules/.bin/vite apps/playground-vue3 --host 127.0.0.1 --port 4174',
+      url: 'http://127.0.0.1:4174',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000
     }

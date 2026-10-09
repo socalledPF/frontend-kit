@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 const apps = [
   { name: 'Vue2', url: 'http://127.0.0.1:4172', marker: '用户详情' },
-  { name: 'Vue3', url: 'http://127.0.0.1:4173', marker: '用户管理' }
+  { name: 'Vue3', url: 'http://127.0.0.1:4174', marker: '用户管理' }
 ] as const
 
 async function expectHealthyPage(page: Page) {
@@ -27,16 +27,40 @@ async function expectHealthyPage(page: Page) {
   expect(summary, summary.join('\n')).toEqual([])
 }
 
+async function expectPaintedCharts(page: Page) {
+  await expect(page.locator('.x-chart-panel').first()).toBeVisible()
+  await expect.poll(() => page.locator('.x-chart canvas').count()).toBeGreaterThanOrEqual(2)
+  await expect
+    .poll(() =>
+      page.locator('.x-chart canvas').evaluateAll((canvases) =>
+        canvases.every((element) => {
+          const canvas = element as HTMLCanvasElement
+          if (canvas.width < 40 || canvas.height < 40) return false
+          const pixels = canvas
+            .getContext('2d')
+            ?.getImageData(0, 0, canvas.width, canvas.height).data
+          if (!pixels) return false
+          for (let index = 3; index < pixels.length; index += 4) {
+            if (pixels[index] > 0) return true
+          }
+          return false
+        })
+      )
+    )
+    .toBe(true)
+}
+
 for (const app of apps) {
   test(`${app.name} playground renders accessibly without viewport overflow`, async ({ page }) => {
     await page.goto(app.url)
     await expect(page.getByRole('heading', { name: app.marker, exact: true }).first()).toBeVisible()
+    if (app.name === 'Vue3') await expectPaintedCharts(page)
     await expectHealthyPage(page)
   })
 }
 
 test('Vue3 keyboard workflow opens and closes the business form', async ({ page }) => {
-  await page.goto('http://127.0.0.1:4173')
+  await page.goto('http://127.0.0.1:4174')
   const createButton = page.getByRole('button', { name: '新增用户' })
   await createButton.focus()
   await page.keyboard.press('Enter')

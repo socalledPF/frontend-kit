@@ -1,0 +1,133 @@
+{
+  "name": "@amusite/vue3-echarts-business",
+  "version": "0.0.0",
+  "description": "Vue 3 business chart components powered by Apache ECharts.",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/socalledPF/frontend-kit.git",
+    "directory": "packages/vue3-echarts-business"
+  },
+  "keywords": [
+    "amusite",
+    "vue3",
+    "echarts",
+    "dashboard"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./chart": {
+      "import": {
+        "types": "./dist/entries/chart.d.ts",
+        "default": "./dist/chart.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/chart.d.cts",
+        "default": "./dist/chart.cjs"
+      }
+    },
+    "./chart-panel": {
+      "import": {
+        "types": "./dist/entries/chart-panel.d.ts",
+        "default": "./dist/chart-panel.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/chart-panel.d.cts",
+        "default": "./dist/chart-panel.cjs"
+      }
+    },
+    "./trend-chart": {
+      "import": {
+        "types": "./dist/entries/trend-chart.d.ts",
+        "default": "./dist/trend-chart.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/trend-chart.d.cts",
+        "default": "./dist/trend-chart.cjs"
+      }
+    },
+    "./metric-card": {
+      "import": {
+        "types": "./dist/entries/metric-card.d.ts",
+        "default": "./dist/metric-card.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/metric-card.d.cts",
+        "default": "./dist/metric-card.cjs"
+      }
+    },
+    "./rank-chart": {
+      "import": {
+        "types": "./dist/entries/rank-chart.d.ts",
+        "default": "./dist/rank-chart.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/rank-chart.d.cts",
+        "default": "./dist/rank-chart.cjs"
+      }
+    },
+    "./use-chart-request": {
+      "import": {
+        "types": "./dist/entries/use-chart-request.d.ts",
+        "default": "./dist/use-chart-request.mjs"
+      },
+      "require": {
+        "types": "./dist/entries/use-chart-request.d.cts",
+        "default": "./dist/use-chart-request.cjs"
+      }
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "build": "vite build && node ../../scripts/copy-cjs-types.mjs dist",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "lint": "eslint \"src/**/*.{ts,vue}\""
+  },
+  "peerDependencies": {
+    "echarts": "^6.0.0",
+    "element-plus": "^2.7.0",
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "@amusite/charts-core": "workspace:*",
+    "@element-plus/icons-vue": "^2.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.6",
+    "echarts": "^6.1.0",
+    "element-plus": "^2.14.4",
+    "jsdom": "^24.1.3",
+    "vite": "~8.1.0",
+    "vite-plugin-dts": "^5.0.3",
+    "vue": "^3.5.0",
+    "vue-tsc": "^3.3.8"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}

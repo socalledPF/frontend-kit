@@ -5,8 +5,8 @@
 ## Vue3 项目
 
 ```bash
-pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/vue3-element-plus-business @amusite/styles
-pnpm add axios vue@^3.3 element-plus@^2.7 vue-demi
+pnpm add @amusite/utils @amusite/request @amusite/vue-core @amusite/vue3-element-plus-business @amusite/vue3-echarts-business @amusite/styles
+pnpm add axios vue@^3.3 element-plus@^2.7 echarts@^6 vue-demi
 ```
 
 ```ts
@@ -15,8 +15,10 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import Vue3ElementPlusBusiness from '@amusite/vue3-element-plus-business'
 import '@amusite/vue3-element-plus-business/style.css'
+import Vue3EChartsBusiness from '@amusite/vue3-echarts-business'
+import '@amusite/vue3-echarts-business/style.css'
 
-createApp(App).use(ElementPlus).use(Vue3ElementPlusBusiness).mount('#app')
+createApp(App).use(ElementPlus).use(Vue3ElementPlusBusiness).use(Vue3EChartsBusiness).mount('#app')
 ```
 
 ## Vue2 项目

@@ -9,7 +9,9 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@amusite/vue3-echarts-business": "workspace:*",
     "@amusite/vue3-element-plus-business": "workspace:*",
+    "echarts": "^6.1.0",
     "element-plus": "^2.14.4",
     "vue": "^3.5.0"
   },

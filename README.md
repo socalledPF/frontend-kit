@@ -10,6 +10,8 @@ and RuoYi-style admin systems.
 - `@amusite/request`: adapter-driven Axios client.
 - `@amusite/vue-core`: Vue 2/3 composables through `vue-demi`.
 - `@amusite/business-core`: shared business types and policies.
+- `@amusite/charts-core`: framework-neutral chart data, options and formatters.
+- `@amusite/vue3-echarts-business`: Vue 3 business charts powered by ECharts.
 - `@amusite/vue3-element-plus-business`: active Vue 3 component suite.
 - `@amusite/vue2-element-business`: compatibility-maintenance Vue 2 suite.
 - `@amusite/styles`: shared tokens and admin layout styles.

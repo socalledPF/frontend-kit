@@ -8,6 +8,7 @@ import type {
   UploadItem,
   UploadRequestContext
 } from '@amusite/vue3-element-plus-business'
+import type { ChartSeriesField, RankChartItem } from '@amusite/vue3-echarts-business'
 
 interface UserRow {
   id: number
@@ -95,6 +96,37 @@ const editableColumns: EditableTableColumn[] = [
     editorProps: { type: 'number', min: 1 }
   }
 ]
+const chartView = ref<'chart' | 'table'>('chart')
+const chartLoading = ref(false)
+const trendData = ref([
+  { date: '10-03', revenue: 18600, orders: 286 },
+  { date: '10-04', revenue: 22100, orders: 312 },
+  { date: '10-05', revenue: 20900, orders: 301 },
+  { date: '10-06', revenue: 26400, orders: 348 },
+  { date: '10-07', revenue: 28100, orders: 376 },
+  { date: '10-08', revenue: 31500, orders: 408 },
+  { date: '10-09', revenue: 34200, orders: 431 }
+])
+const trendSeries: ChartSeriesField[] = [
+  { key: 'revenue', label: '成交额', type: 'bar', prefix: '¥', color: '#247a61' },
+  {
+    key: 'orders',
+    label: '订单数',
+    type: 'line',
+    unit: ' 单',
+    color: '#d97706',
+    smooth: true,
+    yAxisIndex: 1
+  }
+]
+const rankData: RankChartItem[] = [
+  { name: '华东大区', value: 82400 },
+  { name: '华南大区', value: 71600 },
+  { name: '华北大区', value: 63800 },
+  { name: '西南大区', value: 48900 },
+  { name: '华中大区', value: 42600 },
+  { name: '东北大区', value: 31500 }
+]
 const statuses = [
   { label: '正常', value: '0', type: 'success' },
   { label: '停用', value: '1', type: 'danger' }
@@ -136,6 +168,11 @@ const rows = computed(() =>
   })
 )
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+async function refreshCharts() {
+  chartLoading.value = true
+  await wait(480)
+  chartLoading.value = false
+}
 async function refresh() {
   loading.value = true
   await wait(520)
@@ -255,6 +292,74 @@ async function saveRoleGroup() {
           </div>
           <div class="page-heading__summary">{{ rows.length }} 个账号</div>
         </div>
+        <section class="metrics-grid" aria-label="运营指标">
+          <XMetricCard
+            title="本月成交额"
+            :value="128460"
+            :previous-value="119820"
+            :target="150000"
+            prefix="¥"
+            :trend="[18, 23, 21, 28, 30, 34, 38]"
+            color="#247a61"
+          />
+          <XMetricCard
+            title="新增客户"
+            :value="326"
+            :previous-value="298"
+            unit=" 人"
+            :trend="[20, 24, 22, 27, 31, 29, 36]"
+            color="#2563eb"
+          />
+          <XMetricCard
+            title="退款率"
+            :value="2.36"
+            :previous-value="2.71"
+            unit="%"
+            :positive-is-good="false"
+            :compact="false"
+            :trend="[3.1, 2.9, 2.8, 2.6, 2.7, 2.5, 2.36]"
+            color="#d97706"
+          />
+        </section>
+        <section class="charts-grid">
+          <XChartPanel
+            v-model:view="chartView"
+            title="经营趋势"
+            subtitle="近 7 日成交额与订单数"
+            show-table-toggle
+            refreshable
+            :refreshing="chartLoading"
+            download-file-name="经营趋势.png"
+            @refresh="refreshCharts"
+          >
+            <XTrendChart
+              :data="trendData"
+              dimension="date"
+              :series="trendSeries"
+              :loading="chartLoading"
+              height="300px"
+              aria-label="近七日经营趋势"
+            />
+            <template #table>
+              <el-table :data="trendData" size="small">
+                <el-table-column prop="date" label="日期" />
+                <el-table-column prop="revenue" label="成交额" align="right" />
+                <el-table-column prop="orders" label="订单数" align="right" />
+              </el-table>
+            </template>
+          </XChartPanel>
+          <XChartPanel title="区域成交排名" subtitle="本月累计成交额" :fullscreenable="false">
+            <XRankChart
+              :data="rankData"
+              series-name="成交额"
+              prefix="¥"
+              :top-n="5"
+              show-others
+              height="300px"
+              aria-label="区域成交额排名"
+            />
+          </XChartPanel>
+        </section>
         <section v-show="showSearch" class="search-band">
           <XSearchForm
             v-model:model="query"

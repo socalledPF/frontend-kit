@@ -52,7 +52,7 @@ function provisionPeerFixture(name, dependencies) {
   return join(directory, 'node_modules')
 }
 
-function verifyFixture(name, peers, businessPackage) {
+function verifyFixture(name, peers, businessPackage, chartsPackage) {
   const fixture = join(workspace, name)
   ensure(join(fixture, 'node_modules'))
   installPackedPackages(fixture)
@@ -60,12 +60,20 @@ function verifyFixture(name, peers, businessPackage) {
     link(externalPath(candidates), join(fixture, 'node_modules', ...dependency.split('/')))
   }
 
+  const chartImports = chartsPackage
+    ? `
+import chartsPlugin, { TrendChart } from '${chartsPackage}'
+import TrendChartEntry from '${chartsPackage}/trend-chart'
+if (!chartsPlugin || !TrendChart || !TrendChartEntry) throw new Error('ESM chart consumer failed')
+`
+    : ''
   const source = `
 import plugin, { Upload } from '${businessPackage}'
 import UploadEntry from '${businessPackage}/upload'
 import { createRequest } from '@amusite/request'
 import { createRuoyiRequestAdapter } from '@amusite/ruoyi-adapter'
 if (!plugin || !Upload || !UploadEntry || typeof createRequest !== 'function' || typeof createRuoyiRequestAdapter !== 'function') throw new Error('ESM consumer failed')
+${chartImports}
 `
   execFileSync(process.execPath, ['--input-type=module', '--eval', source], {
     cwd: fixture,
@@ -81,6 +89,13 @@ const plugin = require('${businessPackage}')
 const upload = require('${businessPackage}/upload')
 const request = require('@amusite/request')
 if (!plugin.default || !plugin.Upload || !upload.default || typeof request.createRequest !== 'function') throw new Error('CJS consumer failed')
+${
+  chartsPackage
+    ? `const charts = require('${chartsPackage}')
+const trend = require('${chartsPackage}/trend-chart')
+if (!charts.default || !charts.TrendChart || !trend.default) throw new Error('CJS chart consumer failed')`
+    : ''
+}
 `
     ],
     { cwd: fixture, stdio: 'inherit' }
@@ -92,8 +107,10 @@ if (!plugin.default || !plugin.Upload || !upload.default || typeof request.creat
 import plugin, { type UploadItem } from '${businessPackage}'
 import Upload from '${businessPackage}/upload'
 import { createRequest } from '@amusite/request'
+${chartsPackage ? `import Charts, { type ChartSeriesField } from '${chartsPackage}'` : ''}
 const files: UploadItem[] = []
-void [plugin, Upload, files, createRequest]
+${chartsPackage ? `const series: ChartSeriesField[] = []` : ''}
+void [plugin, Upload, files, createRequest${chartsPackage ? ', Charts, series' : ''}]
 `
   )
   writeFileSync(
@@ -166,6 +183,7 @@ try {
           vue: process.env.AMUSITE_TEST_VUE_VERSION,
           'element-plus': process.env.AMUSITE_TEST_UI_VERSION || 'latest',
           '@element-plus/icons-vue': '^2.3.1',
+          echarts: '^6.1.0',
           axios: '^1.7.0'
         })
       : undefined
@@ -181,9 +199,13 @@ try {
             ? `${custom}/@element-plus/icons-vue`
             : 'packages/vue3-element-plus-business/node_modules/@element-plus/icons-vue'
         ],
+        echarts: [
+          custom ? `${custom}/echarts` : 'packages/vue3-echarts-business/node_modules/echarts'
+        ],
         axios: [custom ? `${custom}/axios` : 'packages/request/node_modules/axios']
       },
-      '@amusite/vue3-element-plus-business'
+      '@amusite/vue3-element-plus-business',
+      '@amusite/vue3-echarts-business'
     )
   }
 } finally {

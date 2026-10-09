@@ -27,6 +27,7 @@ export default defineConfig({
             { text: 'RuoYi Adapter', link: '/guide/ruoyi-adapter' },
             { text: 'Utils', link: '/guide/utils' },
             { text: 'Vue Core', link: '/guide/vue-core' },
+            { text: 'ECharts 业务图表', link: '/guide/charts' },
             { text: '宿主适配与主题', link: '/guide/host-adapters' },
             { text: 'Schema 与 useCrudPage', link: '/guide/schema-crud' },
             { text: '组件 API', link: '/guide/component-api' },
