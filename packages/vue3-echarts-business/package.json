@@ -1,6 +1,6 @@
 {
   "name": "@amusite/vue3-echarts-business",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vue 3 business chart components powered by Apache ECharts.",
   "license": "UNLICENSED",
   "repository": {

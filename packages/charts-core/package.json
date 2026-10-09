@@ -1,6 +1,6 @@
 {
   "name": "@amusite/charts-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-neutral chart contracts, formatters, transforms, and option presets.",
   "license": "UNLICENSED",
   "repository": {

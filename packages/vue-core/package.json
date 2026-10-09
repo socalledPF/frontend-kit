@@ -1,6 +1,6 @@
 {
   "name": "@amusite/vue-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Vue composables for admin business workflows.",
   "license": "UNLICENSED",
   "repository": {

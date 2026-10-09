@@ -1,5 +1,11 @@
 # @amusite/styles
 
+## 0.2.1
+
+### Patch Changes
+
+- 67f62bd: Add the Vue 3 ECharts business chart foundation, shared chart utilities, and chart design tokens.
+
 ## 0.2.0
 
 ### Minor Changes

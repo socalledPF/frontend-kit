@@ -1,5 +1,12 @@
 # @amusite/vue2-element-business
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [add8e57]
+  - @amusite/business-core@0.1.1
+
 ## 0.2.0
 
 ### Minor Changes

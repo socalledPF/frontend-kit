@@ -1,6 +1,6 @@
 {
   "name": "@amusite/request",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Adapter-driven request client for RuoYi-style admin projects.",
   "license": "UNLICENSED",
   "repository": {
