@@ -1,5 +1,11 @@
 # @amusite/business-core
 
+## 0.1.1
+
+### Patch Changes
+
+- add8e57: Fix token refresh retry limits, schema model isolation, query reset snapshots, and CRUD refresh failure handling.
+
 ## 0.1.0
 
 ### Minor Changes

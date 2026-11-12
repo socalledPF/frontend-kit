@@ -1,5 +1,13 @@
 # @amusite/ruoyi-adapter
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [add8e57]
+  - @amusite/business-core@0.1.1
+  - @amusite/request@0.2.1
+
 ## 0.1.0
 
 ### Minor Changes

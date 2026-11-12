@@ -1,6 +1,6 @@
 {
   "name": "@amusite/ruoyi-adapter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Framework-neutral RuoYi adapters for Amusite requests and business workflows.",
   "license": "UNLICENSED",
   "repository": {
